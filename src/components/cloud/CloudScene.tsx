@@ -33,7 +33,6 @@ export function CloudScene() {
     renderer.domElement.style.height = '100%'
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xb9d6ee)
 
     const camera = new THREE.PerspectiveCamera(44, host.clientWidth / host.clientHeight, 0.1, 2000)
     camera.position.set(0, 28, 34)
@@ -50,14 +49,13 @@ export function CloudScene() {
     const sunDir = sunPosition()
     buildFog(scene)
     buildSky(scene, sunDir)
-    const water = buildWater(scene, sunDir)
     buildLights(scene, sunDir)
 
-    // 微微的远处海平线雾多了一层柔光
     const boats: Boat[] = []
     const clock = new THREE.Clock()
     let t = 0
     let lastStorePush = 0
+    let water: Awaited<ReturnType<typeof buildWater>> | null = null
 
     const tick = useFleetStore.getState().tickMock
 
@@ -67,7 +65,7 @@ export function CloudScene() {
       const dt = Math.min(clock.getDelta(), 0.05)
       t += dt
       const km = formationAt(t)
-      water.material.uniforms['time'].value += dt * 0.5
+      if (water) water.material.uniforms['time'].value += dt * 0.5
       for (const b of boats) {
         const k = km[b.id as keyof typeof km]
         if (!k) continue
@@ -92,10 +90,14 @@ export function CloudScene() {
       renderer.render(scene, camera)
     }
 
-    loadBoatModels()
-      .then((models) => {
-        if (disposed) return
-        const halfBeamCache: Record<string, number> = {}
+    Promise.all([buildWater(scene, sunDir), loadBoatModels()])
+      .then(([w, models]) => {
+        if (disposed) {
+          w.geometry.dispose()
+          ;(w.material as THREE.Material).dispose()
+          return
+        }
+        water = w
         for (const u of FLEET) {
           const m = models[u.model]
           const g = cloneBoat(m)
@@ -122,20 +124,17 @@ export function CloudScene() {
               }
             })
           }
-          const halfBeam = Math.max(0.2, m.beam * 0.45)
-          halfBeamCache[u.id] = halfBeam
-          const wake = new Wake(scene, { halfBeam })
-          // 虚拟领导者尾迹稍弱
+          const halfBeam = Math.max(0.01, m.beam * 0.0225)
+          const wake = new Wake(scene, { halfBeam, lifeWindow: 3.25 })
           scene.add(g)
           boats.push({ id: u.id, group: g, wake, model: m, halfBeam })
-          void halfBeamCache
         }
         setPhase('ready')
         clock.start()
         loop()
       })
       .catch((err) => {
-        console.error('模型加载失败', err)
+        console.error('模型或水面资源加载失败', err)
         setPhase('error')
       })
 
@@ -164,8 +163,10 @@ export function CloudScene() {
           else mat?.dispose?.()
         }
       })
-      water.geometry.dispose()
-      ;(water.material as THREE.Material).dispose()
+      if (water) {
+        water.geometry.dispose()
+        ;(water.material as THREE.Material).dispose()
+      }
       renderer.dispose()
       if (renderer.domElement.parentElement === host) host.removeChild(renderer.domElement)
     }
@@ -184,7 +185,7 @@ export function CloudScene() {
             <div className="font-display text-[15px] font-600 text-ink">
               {phase === 'loading'
                 ? '正在装载六艇编队与水域…'
-                : '模型或资源加载失败，请检查 assets/USV_*.glb'}
+                : '模型或水面资源加载失败，请检查 assets/USV_*.glb'}
             </div>
             {phase === 'loading' && (
               <div className="mt-2 flex justify-center gap-1.5">

@@ -45,7 +45,8 @@ function bakePrototype(gltf: any): BoatModel {
     prototype: grp,
     length: nSize.z,
     beam: nSize.x,
-    yOffset: nSize.y / 2,
+    // 略下沉：底面越过 y=0，形成更自然的吃水
+    yOffset: nSize.y / 2 - 0.55,
     scale,
   }
 }
@@ -75,7 +76,7 @@ export function cloneBoat(m: BoatModel): THREE.Group {
 }
 
 /** 船首方向（弧度） → 船体绕 y 轴旋转角。
- *  模型默认船首朝 +z，旋转角 θ 使 +z→(sinθ,0,cosθ)。 */
+ *  模型默认船首朝 -x（需逆时针校正 90°），旋转角 θ 使船首→(fx,0,fz)。 */
 export function headingToYRot(fx: number, fz: number): number {
-  return Math.atan2(fx, fz)
+  return Math.atan2(fx, fz) + Math.PI / 2
 }

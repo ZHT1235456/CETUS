@@ -50,7 +50,7 @@ function FaultCard({ id, unit, model, formation }: CardProps) {
           </div>
         </div>
         <Badge tone={un ? 'water' : 'primary'}>
-          {un ? '虚拟领导者' : '真实艇'}
+          {un ? '虚拟领导者' : '实艇'}
         </Badge>
       </div>
 
@@ -120,8 +120,8 @@ export function FaultGrid() {
   const faults = FLEET.filter((u) => frame[u.id].isFault).length
 
   return (
-    <div className="pointer-events-auto w-[288px]">
-      <div className="panel rounded-md p-4">
+    <div className="pointer-events-auto w-full">
+      <div className="panel-flat rounded-md p-4">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -158,7 +158,7 @@ export function FaultGrid() {
 
         <div className="hairline my-3.5" />
 
-        <div className="max-h-[calc(100vh-22rem)] side-scroll space-y-2 overflow-y-auto pr-1">
+        <div className="space-y-2 pr-1">
           {FLEET.map((u) => (
             <FaultCard
               key={u.id}

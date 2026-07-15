@@ -254,22 +254,21 @@ export class Wake {
     let idx = this.partCursor
     this.partCursor = (this.partCursor + 1) % this.MAX_PART
     const i3 = idx * 3
-    this.partPos[i3 + 0] = stern.x + (Math.random() - 0.5) * 0.18
+    this.partPos[i3 + 0] = stern.x + (Math.random() - 0.5) * 0.09
     this.partPos[i3 + 1] = stern.y + 0.02
-    this.partPos[i3 + 2] = stern.z + (Math.random() - 0.5) * 0.18
-    const back = -1.0 - Math.random() * 0.8
-    this.partVel[i3 + 0] = state.fx * back + (Math.random() - 0.5) * 0.4
-    this.partVel[i3 + 1] = 0.05 + Math.random() * 0.08
-    this.partVel[i3 + 2] = state.fz * back + (Math.random() - 0.5) * 0.4
-    const life = 1.2 + Math.random() * 1.0
+    this.partPos[i3 + 2] = stern.z + (Math.random() - 0.5) * 0.09
+    const back = -0.5 - Math.random() * 0.4
+    this.partVel[i3 + 0] = state.fx * back + (Math.random() - 0.5) * 0.2
+    this.partVel[i3 + 1] = 0.025 + Math.random() * 0.04
+    this.partVel[i3 + 2] = state.fz * back + (Math.random() - 0.5) * 0.2
+    const life = 0.6 + Math.random() * 0.5
     this.partLife[idx] = life
     this.partMaxLife[idx] = life
-    this.partSize[idx] = (0.6 + Math.random() * 0.8) * 6.0
+    this.partSize[idx] = (0.6 + Math.random() * 0.8) * 3.0
     this.partAlpha[idx] = 1
   }
 
   private updateParticles(dt: number) {
-    let active = 0
     for (let i = 0; i < this.MAX_PART; i++) {
       const i3 = i * 3
       if (this.partLife[i] <= 0) {
@@ -277,6 +276,11 @@ export class Wake {
         continue
       }
       this.partLife[i] -= dt
+      if (this.partLife[i] <= 0) {
+        this.partLife[i] = 0
+        this.partAlpha[i] = 0
+        continue
+      }
       this.partVel[i3 + 1] -= 0.6 * dt
       this.partPos[i3 + 0] += this.partVel[i3 + 0] * dt
       this.partPos[i3 + 1] += this.partVel[i3 + 1] * dt
@@ -285,12 +289,12 @@ export class Wake {
         this.partPos[i3 + 1] = 0.02
         this.partVel[i3 + 1] *= -0.25
       }
-      active++
-      const lf = Math.max(0, this.partLife[i]) / this.partMaxLife[i]
+      const lf = this.partLife[i] / this.partMaxLife[i]
       this.partAlpha[i] = Math.pow(lf, 0.6)
-      this.partSize[i] += dt * 0.5
+      this.partSize[i] += dt * 0.25
     }
-    this.partGeo.setDrawRange(0, active)
+    // 环形缓冲：存活粒子不在连续前缀，须画满槽位，靠 alpha=0 丢弃
+    this.partGeo.setDrawRange(0, this.MAX_PART)
     ;(this.partGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true
     ;(this.partGeo.getAttribute('aAlpha') as THREE.BufferAttribute).needsUpdate = true
     ;(this.partGeo.getAttribute('aSize') as THREE.BufferAttribute).needsUpdate = true

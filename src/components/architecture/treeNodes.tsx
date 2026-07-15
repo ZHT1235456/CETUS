@@ -37,7 +37,7 @@ export function TreeNode({ data }: NodeProps<RFN>) {
           onDoubleClick={onClick}
           onClick={onClick}
           className={cn(common, 'group hover:scale-[1.015]')}
-          style={{ width: 252 }}
+          style={{ width: 288 }}
         >
           <Handle type="source" position={Position.Bottom} className="!bottom-[-2px]" />
           <div className="relative overflow-hidden rounded-sm border border-primary/25 bg-gradient-to-b from-primary to-primary-2 px-5 py-4 text-surface shadow-2">
@@ -49,15 +49,15 @@ export function TreeNode({ data }: NodeProps<RFN>) {
               }}
             />
             <div className="relative flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-sm bg-surface/15 ring-1 ring-surface/30">
-                <Cloud className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              <div className="grid h-11 w-11 place-items-center rounded-sm bg-surface/15 ring-1 ring-surface/30">
+                <Cloud className="h-[22px] w-[22px]" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-[17px] font-700 leading-none">{data.label}</span>
-                  <span className="chip text-surface/70">{data.en}</span>
+                  <span className="font-display text-[23px] font-700 leading-none">{data.label}</span>
+                  <span className="chip text-[13.5px] text-surface/70">{data.en}</span>
                 </div>
-                <div className="mt-1 flex items-center gap-2 font-mono text-[10.5px] text-surface/80">
+                <div className="mt-1.5 flex items-center gap-2 font-mono text-[14px] text-surface/80">
                   <Dot tone="ok" pulse />
                   编队在线 · 6/6
                 </div>
@@ -74,23 +74,22 @@ export function TreeNode({ data }: NodeProps<RFN>) {
           onDoubleClick={onClick}
           onClick={onClick}
           className={cn(common, 'group')}
-          style={{ width: 196 }}
+          style={{ width: 220 }}
         >
           <Handle type="target" position={Position.Top} className="!top-[-2px]" />
           <Handle type="source" position={Position.Bottom} className="!bottom-[-2px]" />
-          <div className="relative overflow-hidden rounded-sm border border-water/30 bg-gradient-to-b from-surface to-frost px-4 py-3 text-ink shadow-1 transition-all group-hover:border-water/60 group-hover:shadow-2">
+          <div className="relative overflow-hidden rounded-sm border border-water/30 bg-gradient-to-b from-surface to-frost px-4 py-3.5 text-ink shadow-1 transition-all group-hover:border-water/60 group-hover:shadow-2">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-sm border border-water/25 bg-water/10 text-water">
-                <Waypoints className="h-[16px] w-[16px]" strokeWidth={1.7} />
+              <div className="grid h-10 w-10 place-items-center rounded-sm border border-water/25 bg-water/10 text-water">
+                <Waypoints className="h-[20px] w-[20px]" strokeWidth={1.7} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-[15px] font-600">{data.label}</span>
-                  <span className="chip text-ink-faint">{navEn(data.navTo)}</span>
+                  <span className="font-display text-[21px] font-600">{data.label}</span>
+                  <span className="chip text-[13.5px] text-ink-faint">{navEn(data.navTo)}</span>
                 </div>
-                <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[10px] text-water">
-                  <span className="font-700">F{data.formationKey}</span>
-                  · leader-follower × 3
+                <div className="mt-0.5 font-mono text-[14px] font-700 text-water">
+                  F{data.formationKey}
                 </div>
               </div>
             </div>
@@ -105,18 +104,18 @@ export function TreeNode({ data }: NodeProps<RFN>) {
           onDoubleClick={onClick}
           onClick={onClick}
           className={cn(common, 'group')}
-          style={{ width: 168 }}
+          style={{ width: 190 }}
         >
           <Handle type="target" position={Position.Top} className="!top-[-2px]" />
           <Handle type="source" position={Position.Bottom} className="!bottom-[-2px]" />
-          <div className="relative overflow-hidden rounded-sm border border-line-strong/60 bg-surface px-3.5 py-2.5 text-ink shadow-1 transition-all group-hover:border-primary/50 group-hover:shadow-2">
+          <div className="relative overflow-hidden rounded-sm border border-line-strong/60 bg-surface px-3.5 py-3 text-ink shadow-1 transition-all group-hover:border-primary/50 group-hover:shadow-2">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-7 w-7 place-items-center rounded-sm bg-primary/8 text-primary ring-1 ring-primary/15">
-                <Server className="h-[14px] w-[14px]" strokeWidth={1.8} />
+              <div className="grid h-9 w-9 place-items-center rounded-sm bg-primary/8 text-primary ring-1 ring-primary/15">
+                <Server className="h-[18px] w-[18px]" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
-                <div className="font-display text-[13.5px] font-600 leading-tight">{data.label}</div>
-                <div className="chip text-ink-faint">端 · 单艇节点</div>
+                <div className="font-display text-[18px] font-600 leading-tight">{data.label}</div>
+                <div className="chip text-[13.5px] text-ink-faint">端 · 单艇节点</div>
               </div>
             </div>
           </div>
@@ -128,7 +127,7 @@ export function TreeNode({ data }: NodeProps<RFN>) {
       const cfg = data.usvId ? FLEET_BY_ID[data.usvId] : null
       const isUn = cfg?.model === 'untextured'
       return (
-        <div className={cn(common, 'cursor-default')} style={{ width: 150 }}>
+        <div className={cn(common, 'cursor-default')} style={{ width: 180 }}>
           <Handle type="target" position={Position.Top} className="!top-[-2px]" />
           <div
             className={cn(
@@ -141,31 +140,31 @@ export function TreeNode({ data }: NodeProps<RFN>) {
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
-                  'grid h-8 w-8 shrink-0 place-items-center rounded-sm ring-1',
+                  'grid h-10 w-10 shrink-0 place-items-center rounded-sm ring-1',
                   isUn
                     ? 'bg-water/10 text-water ring-water/25'
                     : 'bg-primary/8 text-primary ring-primary/15',
                 )}
               >
-                <Anchor className="h-[15px] w-[15px]" strokeWidth={1.8} />
+                <Anchor className="h-[19px] w-[19px]" strokeWidth={1.8} />
               </div>
               <div className="flex-1 leading-tight">
-                <div className="font-mono text-[12.5px] font-700 tracking-tight text-ink">
+                <div className="font-mono text-[16px] font-700 tracking-tight text-ink">
                   {data.usvId}
                 </div>
                 <div
                   className={cn(
-                    'chip',
+                    'chip text-[13.5px]',
                     isUn ? 'text-water' : 'text-ink-faint',
                   )}
                 >
-                  {isUn ? '虚拟领导者' : '真实艇'}
+                  {isUn ? '虚拟领导者' : '实艇'}
                 </div>
               </div>
             </div>
             {/* mini health strip */}
             <div className="mt-2 flex items-center gap-2">
-              <div className="h-1 flex-1 overflow-hidden rounded-full bg-ink-ghost/25">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-ghost/25">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -178,7 +177,7 @@ export function TreeNode({ data }: NodeProps<RFN>) {
               </div>
               <span
                 className={cn(
-                  'font-mono text-[9.5px] font-500',
+                  'font-mono text-[13px] font-500',
                   unit.isFault ? 'text-accent' : 'text-ink-soft',
                 )}
               >
@@ -200,8 +199,10 @@ function navEn(navTo?: string) {
   return ''
 }
 
+const EMPTY_UNIT = { health: 100, isFault: false }
+
 function useFleetUnit(id?: USVId) {
-  return useFleetStore((s) => (id ? s.frame[id] : { health: 100, isFault: false }))
+  return useFleetStore((s) => (id ? s.frame[id] : EMPTY_UNIT))
 }
 
 function NavHint({ show }: { show?: boolean }) {

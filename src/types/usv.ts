@@ -7,7 +7,7 @@ export interface USVConfig {
   model: ModelKind
   /** 逆时针序的编队槽位角度（度，0° = +x） */
   angleDeg: number
-  /** 真实艇 / 虚拟领导者 */
+  /** 实艇 / 虚拟领导者 */
   role: 'real' | 'virtual-leader'
   /** 所属边编队 */
   formation: 'A' | 'B'

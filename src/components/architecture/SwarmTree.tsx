@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   MarkerType,
   type Node,
   type Edge,
@@ -11,7 +10,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { TreeNode, type TreeData } from './treeNodes'
 
-const W = { cloud: 252, edge: 196, terminal: 168, usv: 150 }
+const W = { cloud: 288, edge: 220, terminal: 190, usv: 180 }
 
 const node = (id: string, data: TreeData, cx: number, cy: number): Node<TreeData, 'tree'> => {
   const w = W[data.kind]
@@ -22,7 +21,6 @@ const node = (id: string, data: TreeData, cx: number, cy: number): Node<TreeData
     data,
     draggable: false,
     selectable: false,
-    extent: 'parent' as never,
   }
 }
 
@@ -40,30 +38,31 @@ const build = () => {
   // Root — 云
   n.push(node('cloud', { kind: 'cloud', label: '云', en: 'Cloud', navTo: '/cloud' }, 0, 10))
 
-  // 边 x2
+  const tY = 410
+  const leafY = 560
+  // 三个端间距加大避免重合；边落在中间端（虚拟领导者）正上方
+  const formA: { uid: 'USV-1' | 'USV-5' | 'USV-2'; xs: number }[] = [
+    { uid: 'USV-1', xs: -560 },
+    { uid: 'USV-5', xs: -360 },
+    { uid: 'USV-2', xs: -160 },
+  ]
+  const formB: { uid: 'USV-3' | 'USV-6' | 'USV-4'; xs: number }[] = [
+    { uid: 'USV-3', xs: +160 },
+    { uid: 'USV-6', xs: +360 },
+    { uid: 'USV-4', xs: +560 },
+  ]
   const edgeY = 200
+  const edgeAx = formA[1].xs
+  const edgeBx = formB[1].xs
   n.push(
-    node('edge-a', { kind: 'edge', label: '边', en: 'Edge', navTo: '/edge', formationKey: 'A' }, -330, edgeY),
-    node('edge-b', { kind: 'edge', label: '边', en: 'Edge', navTo: '/edge', formationKey: 'B' }, +330, edgeY),
+    node('edge-a', { kind: 'edge', label: '边', en: 'Edge', navTo: '/edge', formationKey: 'A' }, edgeAx, edgeY),
+    node('edge-b', { kind: 'edge', label: '边', en: 'Edge', navTo: '/edge', formationKey: 'B' }, edgeBx, edgeY),
   )
   // 云 ↔ 边（双向）
   e.push(
     bidir('cloud', 'edge-a'),
     bidir('cloud', 'edge-b'),
   )
-
-  const tY = 410
-  const leafY = 560
-  const formA: { uid: 'USV-1' | 'USV-5' | 'USV-2'; xs: number }[] = [
-    { uid: 'USV-1', xs: -470 },
-    { uid: 'USV-5', xs: -330 },
-    { uid: 'USV-2', xs: -190 },
-  ]
-  const formB: { uid: 'USV-3' | 'USV-6' | 'USV-4'; xs: number }[] = [
-    { uid: 'USV-3', xs: +190 },
-    { uid: 'USV-6', xs: +330 },
-    { uid: 'USV-4', xs: +470 },
-  ]
   const mkFormation = (edgeId: string, list: { uid: any; xs: number }[]) => {
     list.forEach(({ uid, xs }) => {
       const tid = `term-${uid}`
@@ -137,29 +136,13 @@ export function SwarmTree() {
           color="rgba(127,168,204,0.22)"
           style={{ maskImage: 'radial-gradient(circle at 50% 40%, #000 0%, transparent 85%)' }}
         />
-        <MiniMap
-          pannable
-          className="!panel"
-          maskColor="rgba(74,130,184,0.08)"
-          nodeColor={(nd) => {
-            const d = nd.data as TreeData
-            return d.kind === 'cloud'
-              ? '#1e4576'
-              : d.kind === 'edge'
-                ? '#3d6d9b'
-                : d.kind === 'terminal'
-                  ? '#4a82b8'
-                  : '#7fa8cc'
-          }}
-          nodeStrokeWidth={0}
-        />
         <Controls showInteractive={false} />
       </ReactFlow>
 
       {/* legend */}
-      <div className="pointer-events-none absolute left-5 top-4 panel-flat rounded-sm px-3 py-2">
-        <div className="label-eyebrow mb-1.5">图例 · Legend</div>
-        <ul className="space-y-1 font-mono text-[10.5px] text-ink-soft">
+      <div className="pointer-events-none absolute left-5 top-4 panel-flat rounded-sm px-3.5 py-2.5">
+        <div className="label-eyebrow mb-1.5 text-[12.5px]">图例 · Legend</div>
+        <ul className="space-y-1.5 font-mono text-[14px] text-ink-soft">
           <li className="flex items-center gap-2"><Dot tone="water" /> 双向数据流</li>
           <li className="flex items-center gap-2"><Dot tone="ghost" /> 模型归属（单向）</li>
           <li className="flex items-center gap-2"><Dot tone="ok" pulse /> 实时在线</li>

@@ -20,11 +20,6 @@ export default function Edge() {
           <Dot tone="water" pulse />
           <span className="chip text-ink-soft">leader → follower 数据流（边编队内协同）</span>
         </div>
-        <div className="panel-flat rounded-sm px-3.5 py-2">
-          <span className="chip text-ink-faint">
-            两 untextured = 虚拟领导者 = {EDGE_FORMATIONS.A.leader} / {EDGE_FORMATIONS.B.leader}
-          </span>
-        </div>
       </div>
     </div>
   )
@@ -32,7 +27,6 @@ export default function Edge() {
 
 function FormationCard({ fk }: { fk: 'A' | 'B' }) {
   const f = EDGE_FORMATIONS[fk]
-  const leaders = f.leader
   return (
     <section className="panel relative flex h-full flex-col rounded-md p-5 rise overflow-hidden">
       {/* 装饰：三角几何水印 */}
@@ -53,9 +47,6 @@ function FormationCard({ fk }: { fk: 'A' | 'B' }) {
           <h3 className="mt-0.5 font-display text-[20px] font-700 text-ink">
             编队 {fk} · Leader-Follower
           </h3>
-          <p className="mt-0.5 text-[12.5px] text-ink-soft">
-            虚拟领导者 {leaders} 集中决策 · 两 followers 继承航向与航速参考
-          </p>
         </div>
         <FormationStat fk={fk} />
       </header>

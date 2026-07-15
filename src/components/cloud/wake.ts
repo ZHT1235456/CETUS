@@ -6,10 +6,11 @@ import * as THREE from 'three'
  */
 
 export interface BoatKinematicState {
+  /** 场景坐标（已 toScene） */
   x: number
   y: number
   z: number
-  /** 船首方向单位向量（xz） */
+  /** 船首方向单位向量（场景 xz） */
   fx: number
   fz: number
   length: number

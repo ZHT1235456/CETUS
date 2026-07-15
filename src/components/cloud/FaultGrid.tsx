@@ -1,4 +1,4 @@
-import { FLEET, FORMATION_RADIUS } from '@/config/fleet'
+import { FLEET, FORMATION_RADIUS, roleLabel } from '@/config/fleet'
 import { FORMATION_OMEGA } from '@/lib/formation'
 import { useFleetStore } from '@/store/usvStore'
 import { Badge, Dot, Progress } from '@/components/ui'
@@ -8,12 +8,12 @@ import type { FaultUnit } from './types'
 interface CardProps {
   id: (typeof FLEET)[number]['id']
   unit: FaultUnit
-  model: 'textured' | 'untextured'
+  role: (typeof FLEET)[number]['role']
   formation: 'A' | 'B'
 }
 
-function FaultCard({ id, unit, model, formation }: CardProps) {
-  const un = model === 'untextured'
+function FaultCard({ id, unit, role, formation }: CardProps) {
+  const isVirtual = role === 'virtual'
   const tone: 'ok' | 'warn' | 'alert' = unit.isFault
     ? 'alert'
     : unit.health >= 90
@@ -25,10 +25,10 @@ function FaultCard({ id, unit, model, formation }: CardProps) {
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-sm border px-3.5 py-3 backdrop-blur-md transition-all',
+        'group relative overflow-hidden rounded-md border px-3.5 py-3 backdrop-blur-md transition-all duration-200',
         unit.isFault
           ? 'border-accent/40 bg-accent/8'
-          : 'border-line-soft bg-surface/70 hover:border-line-strong',
+          : 'border-line-soft bg-surface/70 hover:border-line-strong hover:shadow-1',
       )}
     >
       {/* 顶条 */}
@@ -37,7 +37,7 @@ function FaultCard({ id, unit, model, formation }: CardProps) {
           <span
             className={cn(
               'grid h-7 w-7 place-items-center rounded-sm font-mono text-[11px] font-700 ring-1',
-              un
+              isVirtual
                 ? 'bg-water/12 text-water ring-water/25'
                 : 'bg-primary/10 text-primary ring-primary/20',
             )}
@@ -49,8 +49,8 @@ function FaultCard({ id, unit, model, formation }: CardProps) {
             <div className="chip text-ink-faint">F{formation}</div>
           </div>
         </div>
-        <Badge tone={un ? 'water' : 'primary'}>
-          {un ? '虚拟领导者' : '实艇'}
+        <Badge tone={isVirtual ? 'water' : role === 'leader' ? 'primary' : 'ghost'}>
+          {roleLabel(role)}
         </Badge>
       </div>
 
@@ -73,13 +73,17 @@ function FaultCard({ id, unit, model, formation }: CardProps) {
         <Progress value={unit.health} tone={tone} className="mt-1.5" />
       </div>
 
-      {/* 姿态读数 */}
-      <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+      {/* 姿态读数（对方：X 北 / Y 东） */}
+      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+        <Readout label="X·北" value={unit.x.toFixed(1)} />
+        <Readout label="Y·东" value={unit.y.toFixed(1)} />
         <Readout label="HDG" value={`${hdgDeg.toFixed(0).padStart(3, '0')}°`} />
         <Readout label="SPD" value={`${unit.speed.toFixed(2)}`} />
+      </div>
+      <div className="mt-1.5">
         <Readout
           label="FAULT"
-          value={unit.isFault ? (unit.code ?? 'ERR') : 'OK'}
+          value={unit.isFault ? (unit.code ?? 'ERR') : 'None'}
           tone={unit.isFault ? 'alert' : 'ok'}
         />
       </div>
@@ -130,7 +134,7 @@ export function FaultGrid() {
                 {source === 'live' ? 'LIVE · WS' : 'MOCK · 待扩展'}
               </Badge>
             </div>
-            <h3 className="mt-0.5 font-display text-[16px] font-600 text-ink">
+            <h3 className="mt-0.5 font-display text-[17px] font-600 text-ink">
               编队故障与健康管理
             </h3>
           </div>
@@ -143,17 +147,16 @@ export function FaultGrid() {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Dot tone={faults > 0 ? 'alert' : 'ok'} pulse={faults > 0} />
-          <span className="chip text-ink-soft">
-            {faults > 0 ? `${faults} 艇告警` : '全部正常 · R={R} 编队慢转 ω t'.replace(
-              'R={R}',
-              `${FORMATION_RADIUS}`,
-            )}
-          </span>
-          <span className="ml-auto chip text-ink-faint">
-            ω = {FORMATION_OMEGA.toFixed(3)} rad/s　<span className="text-ink-ghost">R = {FORMATION_RADIUS}</span>
-          </span>
+        <div className="mt-3 flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Dot tone={faults > 0 ? 'alert' : 'ok'} pulse={faults > 0} />
+            <span className="chip text-ink-soft">
+              {faults > 0
+                ? `${faults} 艇告警`
+                : `全部正常`}
+            </span>
+          </div>
+
         </div>
 
         <div className="hairline my-3.5" />
@@ -164,7 +167,7 @@ export function FaultGrid() {
               key={u.id}
               id={u.id}
               unit={frame[u.id]}
-              model={u.model}
+              role={u.role}
               formation={u.formation}
             />
           ))}

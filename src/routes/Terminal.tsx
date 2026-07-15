@@ -8,15 +8,14 @@ export default function Terminal() {
   return (
     <div className="grid h-full place-items-center px-8 py-10">
       <div className="w-full max-w-3xl rise">
-        {/* 页头 */}
-        <div className="panel rounded-md p-6">
+        <div className="panel rounded-lg p-6 shadow-1">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className="label-eyebrow">Terminal Tier · 待扩展</span>
                 <Dot tone="warn" pulse />
               </div>
-              <h2 className="mt-1 font-display text-[26px] font-700 text-ink">端 · 单艇本机控制面</h2>
+              <h2 className="mt-1 font-display text-[24px] font-700 text-ink">端 · 单艇本机控制面</h2>
               <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-ink-soft">
                 本域将呈现单艇本机控制面与多域总线遥测。实时数据将由另一台计算机经
                 <span className="font-mono text-water"> WebSocket </span>
@@ -26,7 +25,6 @@ export default function Terminal() {
             <Badge tone="warn">未启用</Badge>
           </div>
 
-          {/* 五域总线占位 */}
           <div className="hairline my-5" />
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
             {DOMAINS.map((d, i) => {
@@ -34,7 +32,7 @@ export default function Terminal() {
               return (
                 <div
                   key={d}
-                  className="relative overflow-hidden rounded-xs border border-line-soft bg-surface/60 p-3"
+                  className="relative overflow-hidden rounded-sm border border-line-soft bg-surface/70 p-3 transition-shadow hover:shadow-1"
                 >
                   <div className="absolute right-2 top-2 font-mono text-[9px] text-ink-ghost">
                     P0{i + 1}
@@ -49,7 +47,6 @@ export default function Terminal() {
                     <span className="h-1.5 w-1.5 rounded-full bg-ink-ghost" />
                     <span className="chip text-ink-ghost">未接入</span>
                   </div>
-                  {/* 占位条 */}
                   <div className="mt-2 space-y-1">
                     {[0, 1, 2].map((k) => (
                       <div key={k} className="h-1 w-full rounded-full bg-ink-ghost/20" />
@@ -61,7 +58,6 @@ export default function Terminal() {
           </div>
         </div>
 
-        {/* 接入说明卡 */}
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InfoCard
             title="实时数据通道"
@@ -75,7 +71,7 @@ export default function Terminal() {
           />
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-2 text-ink-faint">
+        <div className="mt-5 flex items-center justify-center gap-2 text-ink-faint">
           <Cable className="h-3.5 w-3.5" />
           <span className="chip">CETUS · Terminal Tier 占位 · 后续迭代</span>
         </div>
@@ -86,9 +82,9 @@ export default function Terminal() {
 
 function InfoCard({ title, body, chip }: { title: string; body: string; chip: string }) {
   return (
-    <div className="panel-flat rounded-md p-4">
+    <div className="panel-flat rounded-md p-4 shadow-1">
       <div className="flex items-center justify-between">
-        <h4 className="font-display text-[14px] font-600 text-ink">{title}</h4>
+        <h4 className="font-display text-[14.5px] font-600 text-ink">{title}</h4>
         <Badge tone="ghost">{chip}</Badge>
       </div>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">{body}</p>

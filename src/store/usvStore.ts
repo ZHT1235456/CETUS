@@ -9,6 +9,7 @@ const EMPTY_FRAME = (): FleetFrame => {
     f[u.id] = {
       id: u.id,
       x: 0,
+      y: 0,
       z: 0,
       heading: 0,
       speed: 0,

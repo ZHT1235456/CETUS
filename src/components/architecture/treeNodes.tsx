@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
 import { Cloud, Waypoints, Server, Anchor } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { FLEET_BY_ID } from '@/config/fleet'
+import { FLEET_BY_ID, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
 import { Dot } from '@/components/ui'
 import type { USVId } from '@/types/usv'
@@ -54,10 +54,10 @@ export function TreeNode({ data }: NodeProps<RFN>) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-[23px] font-700 leading-none">{data.label}</span>
-                  <span className="chip text-[13.5px] text-surface/70">{data.en}</span>
+                  <span className="font-display text-[25px] font-700 leading-none">{data.label}</span>
+                  <span className="font-mono text-[15px] font-500 tracking-widest uppercase text-surface/70">{data.en}</span>
                 </div>
-                <div className="mt-1.5 flex items-center gap-2 font-mono text-[14px] text-surface/80">
+                <div className="mt-1.5 flex items-center gap-2 font-mono text-[16px] text-surface/80">
                   <Dot tone="ok" pulse />
                   编队在线 · 6/6
                 </div>
@@ -85,10 +85,10 @@ export function TreeNode({ data }: NodeProps<RFN>) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-[21px] font-600">{data.label}</span>
-                  <span className="chip text-[13.5px] text-ink-faint">{navEn(data.navTo)}</span>
+                  <span className="font-display text-[23px] font-600">{data.label}</span>
+                  <span className="font-mono text-[15px] font-500 tracking-widest uppercase text-ink-faint">{navEn(data.navTo)}</span>
                 </div>
-                <div className="mt-0.5 font-mono text-[14px] font-700 text-water">
+                <div className="mt-0.5 font-mono text-[16px] font-700 text-water">
                   F{data.formationKey}
                 </div>
               </div>
@@ -114,8 +114,10 @@ export function TreeNode({ data }: NodeProps<RFN>) {
                 <Server className="h-[18px] w-[18px]" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
-                <div className="font-display text-[18px] font-600 leading-tight">{data.label}</div>
-                <div className="chip text-[13.5px] text-ink-faint">端 · 单艇节点</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-[20px] font-600 leading-tight">{data.label}</span>
+                  <span className="font-mono text-[15px] font-500 tracking-widest uppercase text-ink-faint">{data.en}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -125,23 +127,27 @@ export function TreeNode({ data }: NodeProps<RFN>) {
 
     case 'usv': {
       const cfg = data.usvId ? FLEET_BY_ID[data.usvId] : null
-      const isUn = cfg?.model === 'untextured'
+      const role = cfg?.role
+      const isVirtual = role === 'virtual'
+      const isLeader = role === 'leader'
       return (
         <div className={cn(common, 'cursor-default')} style={{ width: 180 }}>
           <Handle type="target" position={Position.Top} className="!top-[-2px]" />
           <div
             className={cn(
               'relative overflow-hidden rounded-sm border px-3 py-2.5 transition-all',
-              isUn
+              isVirtual
                 ? 'border-water/30 bg-water/6'
-                : 'border-line-soft bg-surface',
+                : isLeader
+                  ? 'border-primary/30 bg-surface'
+                  : 'border-line-soft bg-surface',
             )}
           >
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
                   'grid h-10 w-10 shrink-0 place-items-center rounded-sm ring-1',
-                  isUn
+                  isVirtual
                     ? 'bg-water/10 text-water ring-water/25'
                     : 'bg-primary/8 text-primary ring-primary/15',
                 )}
@@ -149,16 +155,16 @@ export function TreeNode({ data }: NodeProps<RFN>) {
                 <Anchor className="h-[19px] w-[19px]" strokeWidth={1.8} />
               </div>
               <div className="flex-1 leading-tight">
-                <div className="font-mono text-[16px] font-700 tracking-tight text-ink">
+                <div className="font-mono text-[18px] font-700 tracking-tight text-ink">
                   {data.usvId}
                 </div>
                 <div
                   className={cn(
-                    'chip text-[13.5px]',
-                    isUn ? 'text-water' : 'text-ink-faint',
+                    'font-mono text-[15px] font-500 tracking-widest uppercase',
+                    isVirtual ? 'text-water' : isLeader ? 'text-primary' : 'text-ink-faint',
                   )}
                 >
-                  {isUn ? '虚拟领导者' : '实艇'}
+                  {role ? roleLabel(role) : '—'}
                 </div>
               </div>
             </div>
@@ -177,7 +183,7 @@ export function TreeNode({ data }: NodeProps<RFN>) {
               </div>
               <span
                 className={cn(
-                  'font-mono text-[13px] font-500',
+                  'font-mono text-[14px] font-500',
                   unit.isFault ? 'text-accent' : 'text-ink-soft',
                 )}
               >

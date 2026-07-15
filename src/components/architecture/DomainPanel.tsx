@@ -91,18 +91,20 @@ export function DomainPanel() {
             <Cpu className="h-4 w-4 text-primary" strokeWidth={1.8} />
             <span className="label-eyebrow">Domain Controller</span>
           </div>
-          <h3 className="mt-0.5 font-display text-[19px] font-600 text-ink">域控制器架构</h3>
+          <h3 className="mt-1 font-display text-[22px] font-600 text-ink">域控制器架构</h3>
         </div>
         <Badge tone="water">5 域 · 协同</Badge>
       </div>
 
       <div className="hairline mx-6" />
 
-      <div className="relative side-scroll flex-1 space-y-3 overflow-y-auto px-6 py-5">
-        {/* guideline rail */}
+      <div className="relative side-scroll flex-1 space-y-3.5 overflow-y-auto px-6 py-5">
         <div
           className="pointer-events-none absolute left-[34px] top-7 bottom-7 w-px"
-          style={{ background: 'linear-gradient(180deg, transparent, var(--color-line-strong), transparent)' }}
+          style={{
+            background:
+              'linear-gradient(180deg, transparent, var(--color-line-strong), transparent)',
+          }}
         />
         {DOMAINS.map((d, i) => (
           <DomainCard key={d.id} {...d} index={i} />
@@ -131,13 +133,13 @@ function DomainCard({
 }) {
   return (
     <div
-      className="panel relative rounded-md p-4 rise"
+      className="panel relative rounded-lg p-4 rise transition-shadow duration-300 hover:shadow-3"
       style={{ animationDelay: `${0.06 * index}s` }}
     >
       <div className="flex items-start gap-4">
-        <div className="relative z-10 grid h-11 w-11 shrink-0 place-items-center rounded-sm border border-primary/20 bg-surface text-primary shadow-1">
-          <Icon className="h-[19px] w-[19px]" strokeWidth={1.7} />
-          <span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-[9.5px] font-700 text-surface">
+        <div className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-md border border-primary/20 bg-gradient-to-b from-surface to-frost text-primary shadow-1">
+          <Icon className="h-[20px] w-[20px]" strokeWidth={1.7} />
+          <span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-[9.5px] font-700 text-surface shadow-1">
             {String(index + 1).padStart(2, '0')}
           </span>
         </div>
@@ -145,10 +147,10 @@ function DomainCard({
           <div className="flex items-center justify-between gap-2">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-[16px] font-600 text-ink">{zh}</span>
+                <span className="font-display text-[18px] font-600 text-ink">{zh}</span>
                 <span className="chip text-ink-faint">{en}</span>
               </div>
-              <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-soft">{desc}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{desc}</p>
             </div>
             <span className="flex items-center gap-1.5">
               <Dot tone={tone} pulse />
@@ -158,14 +160,14 @@ function DomainCard({
             </span>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3.5 grid grid-cols-3 gap-2.5">
             {metrics.map(([k, v]) => (
               <div
                 key={k}
-                className="rounded-xs border border-line-soft bg-surface/70 px-2.5 py-1.5"
+                className="rounded-sm border border-line-soft bg-surface/80 px-2.5 py-2.5"
               >
                 <div className="chip text-ink-faint">{k}</div>
-                <div className="font-mono text-[12.5px] font-500 text-ink">{v}</div>
+                <div className="mt-0.5 font-mono text-[13.5px] font-600 text-ink">{v}</div>
               </div>
             ))}
           </div>

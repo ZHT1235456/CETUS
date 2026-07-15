@@ -75,8 +75,9 @@ export function cloneBoat(m: BoatModel): THREE.Group {
   return g
 }
 
-/** 船首方向（弧度） → 船体绕 y 轴旋转角。
- *  模型默认船首朝 -x（需逆时针校正 90°），旋转角 θ 使船首→(fx,0,fz)。 */
+/** 船首方向（场景水平分量）→ 船体绕 y 轴旋转角。
+ *  模型默认船首朝 -x（需逆时针校正 90°），旋转角 θ 使船首→(fx,0,fz)。
+ *  传入的应为 toSceneForward 之后的场景分量。 */
 export function headingToYRot(fx: number, fz: number): number {
   return Math.atan2(fx, fz) + Math.PI / 2
 }

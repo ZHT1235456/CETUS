@@ -40,16 +40,16 @@ const build = () => {
 
   const tY = 410
   const leafY = 560
-  // 三个端间距加大避免重合；边落在中间端（虚拟领导者）正上方
-  const formA: { uid: 'USV-1' | 'USV-5' | 'USV-2'; xs: number }[] = [
+  // 三个端间距加大；边落在中间领航艇正上方（对齐 diagram：边↔领航艇）
+  const formA: { uid: 'USV-1' | 'USV-2' | 'USV-5'; xs: number }[] = [
     { uid: 'USV-1', xs: -560 },
-    { uid: 'USV-5', xs: -360 },
-    { uid: 'USV-2', xs: -160 },
+    { uid: 'USV-2', xs: -360 },
+    { uid: 'USV-5', xs: -160 },
   ]
-  const formB: { uid: 'USV-3' | 'USV-6' | 'USV-4'; xs: number }[] = [
-    { uid: 'USV-3', xs: +160 },
-    { uid: 'USV-6', xs: +360 },
-    { uid: 'USV-4', xs: +560 },
+  const formB: { uid: 'USV-4' | 'USV-3' | 'USV-6'; xs: number }[] = [
+    { uid: 'USV-4', xs: +160 },
+    { uid: 'USV-3', xs: +360 },
+    { uid: 'USV-6', xs: +560 },
   ]
   const edgeY = 200
   const edgeAx = formA[1].xs

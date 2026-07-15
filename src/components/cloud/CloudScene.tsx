@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { useEffect, useRef, useState } from 'react'
 import { FLEET } from '@/config/fleet'
 import { formationAt } from '@/lib/formation'
+import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
 import { useFleetStore } from '@/store/usvStore'
 import { loadBoatModels, cloneBoat, headingToYRot, type BoatModel } from './modelLoader'
 import { applyRenderer, buildFog, buildLights, buildSky, buildWater, sunPosition } from './ocean'
@@ -34,17 +35,19 @@ export function CloudScene() {
 
     const scene = new THREE.Scene()
 
-    const camera = new THREE.PerspectiveCamera(44, host.clientWidth / host.clientHeight, 0.1, 2000)
-    camera.position.set(0, 28, 34)
+    // 看向映射后的作业中心（场景 X←对方 Y，Z←对方 X）
+    const cam = SCENE_CENTER
+    const camera = new THREE.PerspectiveCamera(44, host.clientWidth / host.clientHeight, 0.1, 4000)
+    camera.position.set(cam.x + 0, cam.y + 42, cam.z + 58)
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.08
-    controls.minDistance = 12
-    controls.maxDistance = 110
+    controls.minDistance = 18
+    controls.maxDistance = 220
     controls.maxPolarAngle = THREE.MathUtils.degToRad(86)
     controls.enablePan = false
-    controls.target.set(0, 0, 0)
+    controls.target.set(cam.x, cam.y, cam.z)
 
     const sunDir = sunPosition()
     buildFog(scene)
@@ -69,14 +72,16 @@ export function CloudScene() {
       for (const b of boats) {
         const k = km[b.id as keyof typeof km]
         if (!k) continue
-        b.group.position.set(k.x, b.model.yOffset, k.z)
-        b.group.rotation.y = headingToYRot(k.fx, k.fz)
+        const pos = toScenePosition({ x: k.x, y: k.y, z: 0 }, b.model.yOffset)
+        const fwd = toSceneForward(k.fx, k.fy)
+        b.group.position.set(pos.x, pos.y, pos.z)
+        b.group.rotation.y = headingToYRot(fwd.fx, fwd.fz)
         const state: BoatKinematicState = {
-          x: k.x,
+          x: pos.x,
           y: 0,
-          z: k.z,
-          fx: k.fx,
-          fz: k.fz,
+          z: pos.z,
+          fx: fwd.fx,
+          fz: fwd.fz,
           length: b.model.length,
           beam: b.model.beam,
         }
@@ -98,6 +103,8 @@ export function CloudScene() {
           return
         }
         water = w
+        // 水面跟作业区中心对齐（场景坐标）
+        water.position.set(cam.x, 0, cam.z)
         for (const u of FLEET) {
           const m = models[u.model]
           const g = cloneBoat(m)
@@ -109,8 +116,7 @@ export function CloudScene() {
               }
             }
           })
-          // 虚拟领导者半透明 + 着色强调
-          if (u.role === 'virtual-leader') {
+          if (u.role === 'virtual') {
             g.traverse((o) => {
               if ((o as THREE.Mesh).isMesh) {
                 const mesh = o as THREE.Mesh
@@ -175,7 +181,6 @@ export function CloudScene() {
   return (
     <div className="relative h-full w-full">
       <div ref={hostRef} className="scene-host" />
-      {/* loading veil */}
       {phase !== 'ready' && (
         <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-bg/40 to-bg-2/60 backdrop-blur-sm">
           <div className="panel-flat rounded-md px-5 py-3.5 text-center">
@@ -201,7 +206,6 @@ export function CloudScene() {
           </div>
         </div>
       )}
-      {/* vignette + horizon tints */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{

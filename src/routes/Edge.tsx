@@ -21,15 +21,6 @@ export default function Edge() {
         <FormationCard key="A" fk="A" />
         <FormationCard key="B" fk="B" />
       </div>
-
-      <div className="pointer-events-none absolute bottom-4 left-7 right-7 flex items-center justify-between">
-        <div className="panel-flat flex items-center gap-3 rounded-md px-4 py-2.5 shadow-1 fade-in">
-          <Dot tone="water" pulse />
-          <span className="chip text-ink-soft">
-            单向 / 双向链路（对齐 diagram · 边↔领航艇）
-          </span>
-        </div>
-      </div>
     </div>
   )
 }

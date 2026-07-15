@@ -1,12 +1,10 @@
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { roleLabel, type FLEET } from '@/config/fleet'
-import type { USVConfig } from '@/types/usv'
-
-type FleetUnitCfg = (typeof FLEET)[number]
+import { roleLabel } from '@/config/fleet'
+import type { USVConfig, USVId } from '@/types/usv'
 
 /** 创建跟随艇位的 CSS2D 标签 */
-export function createBoatLabel(cfg: FleetUnitCfg | USVConfig): CSS2DObject {
+export function createBoatLabel(cfg: USVConfig): CSS2DObject {
   const el = document.createElement('div')
   el.className = 'boat-label'
   const virt = cfg.role === 'virtual'
@@ -25,48 +23,53 @@ export function createBoatLabel(cfg: FleetUnitCfg | USVConfig): CSS2DObject {
   return obj
 }
 
-export type ViewPresetId = 'oblique' | 'top' | 'north' | 'east'
+/** 全局视角（非跟踪） */
+export type ViewMode = 'overview' | 'top'
 
-export const VIEW_PRESETS: {
-  id: ViewPresetId
-  label: string
-  en: string
-}[] = [
-  { id: 'oblique', label: '斜视', en: 'Oblique' },
-  { id: 'top', label: '俯视', en: 'Top' },
-  { id: 'north', label: '北望', en: 'North' },
-  { id: 'east', label: '东望', en: 'East' },
-]
-
-/** 相对作业中心的相机位姿（场景坐标） */
-export function viewCameraPose(
-  id: ViewPresetId,
+/** 编队总览 / 俯视 相对作业中心的相机位姿 */
+export function fleetCameraPose(
+  mode: ViewMode,
   center: { x: number; y: number; z: number },
 ): { position: THREE.Vector3; target: THREE.Vector3 } {
   const t = new THREE.Vector3(center.x, center.y, center.z)
-  switch (id) {
-    case 'top':
-      return {
-        position: new THREE.Vector3(center.x, center.y + 110, center.z + 0.05),
-        target: t,
-      }
-    case 'north':
-      // 从北侧看向中心（场景 +Z 为北）
-      return {
-        position: new THREE.Vector3(center.x, center.y + 36, center.z + 78),
-        target: t,
-      }
-    case 'east':
-      // 从东侧看向中心（场景 +X 为东）
-      return {
-        position: new THREE.Vector3(center.x + 78, center.y + 36, center.z),
-        target: t,
-      }
-    case 'oblique':
-    default:
-      return {
-        position: new THREE.Vector3(center.x, center.y + 42, center.z + 58),
-        target: t,
-      }
+  if (mode === 'top') {
+    return {
+      position: new THREE.Vector3(center.x, center.y + 110, center.z + 0.05),
+      target: t,
+    }
+  }
+  return {
+    position: new THREE.Vector3(center.x, center.y + 42, center.z + 58),
+    target: t,
   }
 }
+
+/** 跟踪某艇：相机位于船尾后上方，朝向艇体 */
+export function trackCameraPose(
+  boatPos: THREE.Vector3,
+  sceneFx: number,
+  sceneFz: number,
+): { position: THREE.Vector3; target: THREE.Vector3 } {
+  const fwd = new THREE.Vector3(sceneFx, 0, sceneFz)
+  if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, 1)
+  else fwd.normalize()
+
+  const up = new THREE.Vector3(0, 1, 0)
+  const back = fwd.clone().multiplyScalar(-1)
+  const position = boatPos
+    .clone()
+    .add(back.multiplyScalar(16))
+    .add(up.clone().multiplyScalar(9))
+  const target = boatPos.clone().add(new THREE.Vector3(0, 2.2, 0))
+
+  return { position, target }
+}
+
+export const TRACK_IDS: USVId[] = [
+  'USV-1',
+  'USV-2',
+  'USV-3',
+  'USV-4',
+  'USV-5',
+  'USV-6',
+]

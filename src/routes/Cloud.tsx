@@ -24,7 +24,7 @@ export default function Cloud() {
 
         <div className="pointer-events-none absolute right-6 top-5 z-10 fade-in" style={{ animationDelay: '0.12s' }}>
           <div className="chip rounded-md bg-surface/80 px-3 py-1.5 text-ink-soft ring-1 ring-line-soft backdrop-blur-md shadow-1">
-            鼠标拖拽旋转 · 滚轮缩放
+            拖拽旋转 · 滚轮缩放 · 右下角跟踪单艇 / 切换标签
           </div>
         </div>
 

@@ -1,25 +1,61 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
+import { Crosshair, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
 import { formationAt } from '@/lib/formation'
 import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
 import { useFleetStore } from '@/store/usvStore'
+import { cn } from '@/lib/utils'
+import type { USVId } from '@/types/usv'
 import { loadBoatModels, cloneBoat, headingToYRot, type BoatModel } from './modelLoader'
 import { applyRenderer, buildFog, buildLights, buildSky, buildWater, sunPosition } from './ocean'
 import { Wake, type BoatKinematicState } from './wake'
+import {
+  TRACK_IDS,
+  createBoatLabel,
+  fleetCameraPose,
+  trackCameraPose,
+  type ViewMode,
+} from './sceneHud'
 
 type Boat = {
-  id: string
+  id: USVId
   group: THREE.Group
   wake: Wake
   model: BoatModel
   halfBeam: number
+  label: ReturnType<typeof createBoatLabel>
+  sceneFx: number
+  sceneFz: number
 }
+
+const VIEW_LERP_SPEED = 5.5
+const TRACK_LERP_SPEED = 6.5
+
+type CameraState =
+  | { kind: 'free'; mode: ViewMode }
+  | { kind: 'track'; id: USVId }
 
 export function CloudScene() {
   const hostRef = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [showLabels, setShowLabels] = useState(true)
+  const [cameraState, setCameraState] = useState<CameraState>({ kind: 'free', mode: 'overview' })
+
+  const apiRef = useRef<{
+    setLabelsVisible: (v: boolean) => void
+    setCameraState: (s: CameraState) => void
+  } | null>(null)
+
+  useEffect(() => {
+    apiRef.current?.setLabelsVisible(showLabels)
+  }, [showLabels])
+
+  useEffect(() => {
+    apiRef.current?.setCameraState(cameraState)
+  }, [cameraState])
 
   useEffect(() => {
     const host = hostRef.current!
@@ -33,21 +69,28 @@ export function CloudScene() {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
 
-    const scene = new THREE.Scene()
+    const labelRenderer = new CSS2DRenderer()
+    labelRenderer.setSize(host.clientWidth, host.clientHeight)
+    labelRenderer.domElement.style.position = 'absolute'
+    labelRenderer.domElement.style.inset = '0'
+    labelRenderer.domElement.style.pointerEvents = 'none'
+    host.appendChild(labelRenderer.domElement)
 
-    // 看向映射后的作业中心（场景 X←对方 Y，Z←对方 X）
+    const scene = new THREE.Scene()
     const cam = SCENE_CENTER
+    const startPose = fleetCameraPose('overview', cam)
+
     const camera = new THREE.PerspectiveCamera(44, host.clientWidth / host.clientHeight, 0.1, 4000)
-    camera.position.set(cam.x + 0, cam.y + 42, cam.z + 58)
+    camera.position.copy(startPose.position)
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.08
-    controls.minDistance = 18
+    controls.minDistance = 8
     controls.maxDistance = 220
-    controls.maxPolarAngle = THREE.MathUtils.degToRad(86)
+    controls.maxPolarAngle = THREE.MathUtils.degToRad(89.5)
     controls.enablePan = false
-    controls.target.set(cam.x, cam.y, cam.z)
+    controls.target.copy(startPose.target)
 
     const sunDir = sunPosition()
     buildFog(scene)
@@ -60,7 +103,39 @@ export function CloudScene() {
     let lastStorePush = 0
     let water: Awaited<ReturnType<typeof buildWater>> | null = null
 
+    let camState: CameraState = { kind: 'free', mode: 'overview' }
+    const camGoal = {
+      pos: startPose.position.clone(),
+      target: startPose.target.clone(),
+      active: false,
+    }
+
     const tick = useFleetStore.getState().tickMock
+
+    const applyFreeView = (mode: ViewMode) => {
+      controls.enabled = true
+      controls.maxPolarAngle =
+        mode === 'top' ? THREE.MathUtils.degToRad(89.8) : THREE.MathUtils.degToRad(86)
+      const pose = fleetCameraPose(mode, cam)
+      camGoal.pos.copy(pose.position)
+      camGoal.target.copy(pose.target)
+      camGoal.active = true
+    }
+
+    apiRef.current = {
+      setLabelsVisible: (v) => {
+        for (const b of boats) b.label.visible = v
+      },
+      setCameraState: (s) => {
+        camState = s
+        if (s.kind === 'free') {
+          applyFreeView(s.mode)
+        } else {
+          controls.enabled = false
+          camGoal.active = false
+        }
+      },
+    }
 
     const loop = () => {
       if (disposed) return
@@ -69,13 +144,16 @@ export function CloudScene() {
       t += dt
       const km = formationAt(t)
       if (water) water.material.uniforms['time'].value += dt * 0.5
+
       for (const b of boats) {
-        const k = km[b.id as keyof typeof km]
+        const k = km[b.id]
         if (!k) continue
         const pos = toScenePosition({ x: k.x, y: k.y, z: 0 }, b.model.yOffset)
         const fwd = toSceneForward(k.fx, k.fy)
         b.group.position.set(pos.x, pos.y, pos.z)
         b.group.rotation.y = headingToYRot(fwd.fx, fwd.fz)
+        b.sceneFx = fwd.fx
+        b.sceneFz = fwd.fz
         const state: BoatKinematicState = {
           x: pos.x,
           y: 0,
@@ -87,12 +165,38 @@ export function CloudScene() {
         }
         b.wake.update(state, dt, t)
       }
+
+      if (camState.kind === 'track') {
+        const trackId = camState.id
+        const boat = boats.find((b) => b.id === trackId)
+        if (boat) {
+          const p = boat.group.position
+          const pose = trackCameraPose(p, boat.sceneFx, boat.sceneFz)
+          const a = 1 - Math.exp(-TRACK_LERP_SPEED * dt)
+          camera.position.lerp(pose.position, a)
+          controls.target.lerp(pose.target, a)
+        }
+      } else if (camGoal.active) {
+        const a = 1 - Math.exp(-VIEW_LERP_SPEED * dt)
+        camera.position.lerp(camGoal.pos, a)
+        controls.target.lerp(camGoal.target, a)
+        if (
+          camera.position.distanceTo(camGoal.pos) < 0.08 &&
+          controls.target.distanceTo(camGoal.target) < 0.08
+        ) {
+          camera.position.copy(camGoal.pos)
+          controls.target.copy(camGoal.target)
+          camGoal.active = false
+        }
+      }
+
       if (t - lastStorePush > 0.25) {
         lastStorePush = t
         tick(t)
       }
       controls.update()
       renderer.render(scene, camera)
+      labelRenderer.render(scene, camera)
     }
 
     Promise.all([buildWater(scene, sunDir), loadBoatModels()])
@@ -103,7 +207,6 @@ export function CloudScene() {
           return
         }
         water = w
-        // 水面跟作业区中心对齐（场景坐标）
         water.position.set(cam.x, 0, cam.z)
         for (const u of FLEET) {
           const m = models[u.model]
@@ -130,10 +233,21 @@ export function CloudScene() {
               }
             })
           }
+          const label = createBoatLabel(u)
+          g.add(label)
           const halfBeam = Math.max(0.01, m.beam * 0.0225)
           const wake = new Wake(scene, { halfBeam, lifeWindow: 3.25 })
           scene.add(g)
-          boats.push({ id: u.id, group: g, wake, model: m, halfBeam })
+          boats.push({
+            id: u.id,
+            group: g,
+            wake,
+            model: m,
+            halfBeam,
+            label,
+            sceneFx: 0,
+            sceneFz: 1,
+          })
         }
         setPhase('ready')
         clock.start()
@@ -148,6 +262,7 @@ export function CloudScene() {
       const w = host.clientWidth
       const h = host.clientHeight
       renderer.setSize(w, h)
+      labelRenderer.setSize(w, h)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
     }
@@ -156,10 +271,14 @@ export function CloudScene() {
 
     return () => {
       disposed = true
+      apiRef.current = null
       cancelAnimationFrame(raf)
       ro.disconnect()
       controls.dispose()
-      for (const b of boats) b.wake.dispose(scene)
+      for (const b of boats) {
+        b.wake.dispose(scene)
+        b.label.element.remove()
+      }
       scene.traverse((o) => {
         const mesh = o as THREE.Mesh
         if (mesh.isMesh) {
@@ -175,12 +294,86 @@ export function CloudScene() {
       }
       renderer.dispose()
       if (renderer.domElement.parentElement === host) host.removeChild(renderer.domElement)
+      if (labelRenderer.domElement.parentElement === host) host.removeChild(labelRenderer.domElement)
     }
   }, [])
+
+  const isTracking = cameraState.kind === 'track'
+  const trackId = isTracking ? cameraState.id : null
+  const freeMode = cameraState.kind === 'free' ? cameraState.mode : null
 
   return (
     <div className="relative h-full w-full">
       <div ref={hostRef} className="scene-host" />
+
+      {phase === 'ready' && (
+        <div className="pointer-events-auto absolute bottom-5 right-5 z-20 flex max-w-[min(100%,420px)] flex-col items-end gap-2 fade-in">
+          <button
+            type="button"
+            onClick={() => setShowLabels((s) => !s)}
+            className={cn(
+              'panel-flat flex items-center gap-2 rounded-md px-3 py-2 shadow-1 transition-colors',
+              showLabels ? 'text-primary' : 'text-ink-faint',
+            )}
+          >
+            <Tags className="h-3.5 w-3.5" strokeWidth={1.8} />
+            <span className="font-display text-[12.5px] font-600">
+              {showLabels ? '标签 · 开' : '标签 · 关'}
+            </span>
+          </button>
+          <div className="panel-flat rounded-md p-2 shadow-1">
+            <div className="mb-1.5 flex items-center gap-1.5 px-1.5">
+              <Crosshair className="h-3.5 w-3.5 text-ink-faint" strokeWidth={1.8} />
+              <span className="chip text-ink-faint">视角</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCameraState({ kind: 'free', mode: 'overview' })}
+                className={cn(
+                  'rounded-sm px-2.5 py-1.5 font-display text-[12.5px] font-600 transition-colors',
+                  !isTracking && freeMode === 'overview'
+                    ? 'bg-primary text-surface shadow-1'
+                    : 'text-ink-soft hover:bg-frost hover:text-ink',
+                )}
+              >
+                斜视
+              </button>
+              <button
+                type="button"
+                onClick={() => setCameraState({ kind: 'free', mode: 'top' })}
+                className={cn(
+                  'rounded-sm px-2.5 py-1.5 font-display text-[12.5px] font-600 transition-colors',
+                  !isTracking && freeMode === 'top'
+                    ? 'bg-primary text-surface shadow-1'
+                    : 'text-ink-soft hover:bg-frost hover:text-ink',
+                )}
+              >
+                俯视
+              </button>
+              <span className="mx-0.5 h-5 w-px bg-line-soft" />
+              <span className="chip px-1 text-ink-ghost">跟踪</span>
+              {TRACK_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setCameraState({ kind: 'track', id })}
+                  className={cn(
+                    'grid h-8 min-w-8 place-items-center rounded-sm font-mono text-[11.5px] font-700 transition-colors',
+                    trackId === id
+                      ? 'bg-water text-surface shadow-1'
+                      : 'bg-surface/80 text-ink-soft ring-1 ring-line-soft hover:bg-frost hover:text-ink',
+                  )}
+                  title={`跟踪 ${id}`}
+                >
+                  {id.replace('USV-', '')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {phase !== 'ready' && (
         <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-bg/40 to-bg-2/60 backdrop-blur-sm">
           <div className="panel-flat rounded-md px-5 py-3.5 text-center">

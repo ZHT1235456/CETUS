@@ -1,0 +1,217 @@
+# Three.js 船尾尾迹制作笔记
+
+## 思路
+
+水面航行物体的尾迹 ≈ **带状泡沫 ribbon + 飞溅粒子**：
+
+- **ribbon**：沿船尾两侧锚点采样历史轨迹，连成 V 字形半透明带，越旧越淡
+- **粒子**：船尾持续喷出泡沫 Points，生命周期内上抛、回落、淡出
+
+两者叠加，远比单独一条贴图拖尾真实。
+
+---
+
+## 依赖
+
+```js
+import * as THREE from 'three';
+// 无需额外 addon，全部用 BufferGeometry + ShaderMaterial 自实现
+```
+
+---
+
+## 一、V 形 ribbon
+
+### 1. 轨迹采样
+
+每帧把船尾左右两个锚点压入历史队列：
+
+```js
+this.ptsL.push({ pos: state.sternL.clone(), born: t });
+this.ptsR.push({ pos: state.sternR.clone(), born: t });
+if (this.ptsL.length > this.MAX_PTS) this.ptsL.shift();
+```
+
+- `MAX_PTS` 控制拖尾最长段数（220 段约够 6 秒历史）
+- 用 `born: t` 记录出生时间，按"年龄"算透明度，与帧率解耦
+
+### 2. 锚点位置（船尾左右）
+
+船首方向 `forward=(sinY,0,cosY)`，右舷 `right=(cosY,0,-sinY)`：
+
+```js
+const L2 = targetLen * 0.5;        // 半船长
+const halfBeam = size.x * scale * 0.1;  // 半船宽（控制 V 形开口）
+const cx = x - sinY * L2;          // 船尾中心
+const cz = z - cosY * L2;
+const rx = cosY * halfBeam, rz = -sinY * halfBeam;
+
+const sternL = new THREE.Vector3(cx - rx, y, cz - rz);
+const sternR = new THREE.Vector3(cx + rx, y, cz + rz);
+```
+
+**`halfBeam` 系数决定两条带间距**：0.32 偏宽、0.16 收窄一倍、0.1 更紧凑（实测 0.1 效果最佳）。调这一个值即可改尾迹"开口"。
+
+### 3. 带状网格重建
+
+每帧从历史锚点重建 BufferGeometry。每段 4 顶点（L0,R0,R1,L1），用 `TriangleStripDrawMode` 渲染：
+
+```js
+for (let i = 0; i < segs; i++) {
+  setV(pos, v + 0, this.ptsL[i].pos,   yL0);
+  setV(pos, v + 1, this.ptsR[i].pos,   yR0);
+  setV(pos, v + 2, this.ptsR[i + 1].pos, yR1);
+  setV(pos, v + 3, this.ptsL[i + 1].pos, yL1);
+  // alpha：越旧越淡
+  alphas[v + 0] = (1 - a0) * 0.55;
+  // ...
+  v += 4;
+}
+geo.setDrawRange(0, v);
+mesh.drawMode = THREE.TriangleStripDrawMode;
+```
+
+- 顶点 y 稍抬 0.02~0.05，避免与水面 Z-fighting
+- `setDrawRange` 动态裁剪未使用区域，省 fillrate
+
+### 4. 着色器
+
+顶点着色器透传 `alpha`、`uv`；片元着色器用 `uv.y` 做边缘羽化：
+
+```glsl
+// fragment
+float edge = smoothstep(0.0, 0.18, vUv.y) * smoothstep(1.0, 0.82, vUv.y);
+float a = vAlpha * (0.55 + 0.45 * edge);
+gl_FragColor = vec4(uColor, a);
+```
+
+- `uColor` 取暖白偏蓝（`0xeaf6ff`），与碧蓝海面对比
+- `transparent: true` + `depthWrite: false` 防自遮蔽
+- `renderOrder = 2` 保证画在水面上方
+
+---
+
+## 二、泡沫粒子
+
+### 1. 环形缓冲池
+
+预分配定长数组，循环复用，避免 GC 抖动：
+
+```js
+this.MAX_PART = 600;
+this.partPos   = new Float32Array(this.MAX_PART * 3);
+this.partAlpha = new Float32Array(this.MAX_PART);
+this.partSize  = new Float32Array(this.MAX_PART);
+this.partVel   = new Float32Array(this.MAX_PART * 3);
+this.partLife  = new Float32Array(this.MAX_PART);
+this.partMaxLife = new Float32Array(this.MAX_PART);
+this.partCursor = 0;
+```
+
+### 2. 发射
+
+每帧由船尾左右锚点喷 n 个粒子，速度向后（船首反方向）+ 随机上抛：
+
+```js
+const back = state.forward.clone().multiplyScalar(-1.2 - Math.random() * 0.8);
+this.partVel[idx * 3 + 0] = back.x + (Math.random() - 0.5) * 0.4;
+this.partVel[idx * 3 + 1] = 0.05 + Math.random() * 0.08; // 上抛
+this.partVel[idx * 3 + 2] = back.z + (Math.random() - 0.5) * 0.4;
+
+const life = 1.2 + Math.random() * 1.0;
+this.partLife[idx] = life;
+this.partMaxLife[idx] = life;
+this.partSize[idx] = (0.6 + Math.random() * 0.8) * 6.0;
+```
+
+### 3. 更新
+
+每帧推进位置 + 衰减生命 + 重力 + 水面反弹：
+
+```js
+this.partVel[i * 3 + 1] -= 0.6 * dt;          // 重力
+pPos[i*3+0] += this.partVel[i*3+0] * dt;
+pPos[i*3+1] += this.partVel[i*3+1] * dt;
+pPos[i*3+2] += this.partVel[i*3+2] * dt;
+if (pPos[i*3+1] < 0.02) {                     // 贴近水面反弹
+  pPos[i*3+1] = 0.02;
+  this.partVel[i*3+1] *= -0.25;
+}
+const lf = this.partLife[i] / this.partMaxLife[i];
+pAlpha[i] = Math.pow(lf, 0.6);                // 非线性淡出
+pSize[i] *= 1.0 + dt * 0.5;                   // 慢慢膨胀
+```
+
+- `drawRange = activeCount` 只画存活粒子
+- 三个 attribute 都 `needsUpdate = true`
+
+### 4. 着色器与贴图
+
+程序化生成径向渐变 + 噪点 Canvas 纹理，避免外部依赖：
+
+```js
+function makeFoamTexture() {
+  const s = 64;
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0.0, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+  g.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+  // 加噪点让粒子不显得太"圆"
+  const img = ctx.getImageData(0, 0, s, s);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 70;
+    img.data[i + 3] = Math.max(0, Math.min(255, img.data[i + 3] + n));
+  }
+  ctx.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(c);
+}
+```
+
+顶点着色器用透视缩放公式：
+
+```glsl
+gl_PointSize = aSize * (300.0 / -mv.z) * uPixel;
+```
+
+- `uPixel = devicePixelRatio` 保证高分屏粒子不糊
+- `frustumCulled = false`，因为粒子位置每帧变，包围盒算不准
+
+---
+
+## 三、与水面协同
+
+| 要点 | 说明 |
+|---|---|
+| ribbon y 抬升 | 顶点 y 加 0.02~0.05，避免与 Water 平面 Z-fighting |
+| `depthWrite: false` | ribbon 和粒子都关深度写，只做 alpha 混合，防自遮蔽闪烁 |
+| `renderOrder` | water 默认 0；ribbon 设 2；粒子设 3，保证叠在上层 |
+| 采样频率 | 每帧 1 个锚点足够；船速很慢时可改成每 2 帧 1 个，拖尾更顺滑 |
+| 锚点间距 = 半船宽 | `halfBeam` 系数直接控制 V 形开口，0.1 收敛最自然 |
+| 时间驱动 alpha | 用 `born` 时间戳而非 `life--` 减法，帧率波动下淡出节奏稳定 |
+| 粒子用环形池 | 定长数组 + cursor 循环复用，零 GC，长期运行不卡顿 |
+
+---
+
+## 四、调参速查
+
+| 现象 | 调谁 |
+|---|---|
+| 尾迹太宽/太窄 | `halfBeam` 系数（0.32 宽 / 0.16 中 / 0.1 紧凑最佳） |
+| 尾迹太长/太短 | `MAX_PTS` 或 `lifeWindow`（秒） |
+| 尾迹颜色发灰 | `uColor`，暖白 `0xeaf6ff` 偏蓝、纯白 `0xffffff` 偏亮 |
+| 粒子太少/太多 | emit 里 `n = 3` 改大改小，或调 `MAX_PART` |
+| 粒子太大/太小 | `partSize` 初始 `* 6.0` 系数 |
+| 粒子飘得太远 | `back` 速度系数 `1.2`，或加大重力 `0.6` |
+| 粒子沉入水面 | y 下限 `0.02` 调高，或加大反弹系数 `-0.25`（更弹） |
+| 拖尾断断续续 | 船速太慢时每帧采样不足，改为每隔 N 帧补插值采样 |
+
+---
+
+## 五、参考实现
+
+- 本项目 `src/wake.js` —— V 形 ribbon + 环形粒子池
+- 思路可推广到任意航迹：把 `sternL/sternR` 换成物体任意两锚点即可

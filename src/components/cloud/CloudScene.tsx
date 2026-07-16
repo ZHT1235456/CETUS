@@ -10,7 +10,7 @@ import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
 import type { USVId } from '@/types/usv'
 import { loadBoatModels, cloneBoat, headingToYRot, type BoatModel } from './modelLoader'
-import { BOAT_VISUAL_SCALE } from './sceneScale'
+import { BOAT_VISUAL_SCALE, WAKE_VISUAL_SCALE } from './sceneScale'
 import { applyRenderer, buildFog, buildLights, buildSky, buildWater, sunPosition } from './ocean'
 import { Wake, type BoatKinematicState } from './wake'
 import {
@@ -259,10 +259,11 @@ export function CloudScene() {
           }
           const label = createBoatLabel(u)
           g.add(label)
-          const halfBeam = Math.max(0.01, m.beam * 0.0225)
+          const wakeScaleRatio = WAKE_VISUAL_SCALE / BOAT_VISUAL_SCALE
+          const halfBeam = Math.max(0.01, m.beam * 0.0225) * wakeScaleRatio
           const wake = new Wake(scene, {
             halfBeam,
-            visualScale: BOAT_VISUAL_SCALE,
+            visualScale: WAKE_VISUAL_SCALE,
             lifeWindow: 3.25,
           })
           scene.add(g)

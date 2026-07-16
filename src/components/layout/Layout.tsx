@@ -7,7 +7,7 @@ const TITLES: Record<string, { zh: string; en: string; sub: string }> = {
   '/architecture': {
     zh: '系统架构',
     en: 'System Architecture',
-    sub: '云·边·端三级拓扑 与 域控制器功能域',
+    sub: '云·边·端 与 域控制器功能域',
   },
   '/cloud': {
     zh: '云',

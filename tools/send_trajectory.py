@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
-"""Send the six-vessel CETUS trajectory to a Tauri receiver over UDP."""
+"""Broadcast the six-vessel CETUS trajectory over WebSocket."""
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import csv
 import json
 import math
-import socket
 import time
 import uuid
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import TypeAlias
 
+try:
+    from websockets.asyncio.server import ServerConnection, serve
+except ImportError as error:  # pragma: no cover - import guard
+    raise SystemExit(
+        "Missing dependency: websockets. Install with: pip install websockets"
+    ) from error
+
 Point: TypeAlias = tuple[float, float]
 Trajectories: TypeAlias = dict[str, list[Point]]
 
+DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5005
 DEFAULT_HZ = 20.0
-MAX_DATAGRAM_BYTES = 1400
+MAX_FRAME_BYTES = 65_536
 FLEET_IDS = tuple(f"USV-{index}" for index in range(1, 7))
 TRAJECTORY_FILES = {
     "USV-1": "trajectory3对应虚拟节点1.csv",
@@ -69,6 +77,29 @@ def load_trajectories(directory: Path) -> Trajectories:
     return trajectories
 
 
+def direction_at(points: Sequence[Point], index: int) -> tuple[float, float]:
+    """Unit forward (north, east) from the current sample toward the next distinct point."""
+    if not 0 <= index < len(points):
+        raise IndexError(index)
+    origin_x, origin_y = points[index]
+
+    for i in range(index + 1, len(points)):
+        dx = points[i][0] - origin_x
+        dy = points[i][1] - origin_y
+        length = math.hypot(dx, dy)
+        if length > 0:
+            return dx / length, dy / length
+
+    for i in range(index - 1, -1, -1):
+        dx = origin_x - points[i][0]
+        dy = origin_y - points[i][1]
+        length = math.hypot(dx, dy)
+        if length > 0:
+            return dx / length, dy / length
+
+    return 1.0, 0.0
+
+
 def heading_and_speed(points: Sequence[Point], index: int, hz: float) -> tuple[float, float]:
     if hz <= 0 or not math.isfinite(hz):
         raise ValueError("hz must be a finite number greater than zero")
@@ -83,7 +114,9 @@ def heading_and_speed(points: Sequence[Point], index: int, hz: float) -> tuple[f
         start, end = points[index - 1], points[index]
     dx = end[0] - start[0]
     dy = end[1] - start[1]
-    return math.atan2(dy, dx), math.hypot(dx, dy) * hz
+    speed = math.hypot(dx, dy) * hz
+    fx, fy = direction_at(points, index)
+    return math.atan2(fy, fx), speed
 
 
 def frame_indices(point_count: int, loop: bool) -> Iterator[int]:
@@ -95,14 +128,14 @@ def frame_indices(point_count: int, loop: bool) -> Iterator[int]:
             return
 
 
-def build_datagram(
+def build_frame(
     trajectories: Mapping[str, Sequence[Point]],
     index: int,
     hz: float,
     stream_id: str,
     seq: int,
     sent_at_ms: int,
-) -> bytes:
+) -> str:
     if set(trajectories) != set(FLEET_IDS):
         raise ValueError("trajectories must contain exactly USV-1 through USV-6")
 
@@ -134,15 +167,43 @@ def build_datagram(
         ensure_ascii=False,
         allow_nan=False,
         separators=(",", ":"),
-    ).encode("utf-8")
-    if len(encoded) > MAX_DATAGRAM_BYTES:
+    )
+    if len(encoded.encode("utf-8")) > MAX_FRAME_BYTES:
         raise ValueError(
-            f"encoded datagram is {len(encoded)} bytes; limit is {MAX_DATAGRAM_BYTES}"
+            f"encoded frame is {len(encoded.encode('utf-8'))} bytes; "
+            f"limit is {MAX_FRAME_BYTES}"
         )
     return encoded
 
 
-def send_trajectory(
+class FleetHub:
+    def __init__(self) -> None:
+        self._clients: set[ServerConnection] = set()
+
+    async def handle(self, connection: ServerConnection) -> None:
+        self._clients.add(connection)
+        remote = connection.remote_address
+        print(f"Client connected: {remote} ({len(self._clients)} total)")
+        try:
+            await connection.wait_closed()
+        finally:
+            self._clients.discard(connection)
+            print(f"Client disconnected: {remote} ({len(self._clients)} total)")
+
+    async def broadcast(self, message: str) -> None:
+        if not self._clients:
+            return
+        stale: list[ServerConnection] = []
+        for client in tuple(self._clients):
+            try:
+                await client.send(message)
+            except Exception:
+                stale.append(client)
+        for client in stale:
+            self._clients.discard(client)
+
+
+async def send_trajectory(
     host: str,
     port: int,
     hz: float,
@@ -153,12 +214,18 @@ def send_trajectory(
     point_count = len(next(iter(trajectories.values())))
     stream_id = str(uuid.uuid4())
     period = 1.0 / hz
-    deadline = time.monotonic()
     seq = 0
+    hub = FleetHub()
 
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
+    async with serve(hub.handle, host, port) as server:
+        sockets = ", ".join(str(sock.getsockname()) for sock in server.sockets or [])
+        print(f"WebSocket fleet server listening on {sockets}")
+        print(f"Clients should connect to ws://<this-host>:{port}")
+
+        loop = asyncio.get_running_loop()
+        deadline = loop.time()
         for index in frame_indices(point_count, should_loop):
-            packet = build_datagram(
+            message = build_frame(
                 trajectories=trajectories,
                 index=index,
                 hz=hz,
@@ -166,22 +233,30 @@ def send_trajectory(
                 seq=seq,
                 sent_at_ms=time.time_ns() // 1_000_000,
             )
-            sender.sendto(packet, (host, port))
+            await hub.broadcast(message)
             seq += 1
             deadline += period
-            remaining = deadline - time.monotonic()
+            remaining = deadline - loop.time()
             if remaining > 0:
-                time.sleep(remaining)
+                await asyncio.sleep(remaining)
             elif remaining < -period:
-                deadline = time.monotonic()
+                deadline = loop.time()
+
     return seq
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Send the six CETUS CSV trajectories as complete UDP fleet frames."
+        description=(
+            "Serve the six CETUS CSV trajectories as complete WebSocket fleet frames "
+            "so the browser and Tauri desktop stay in sync."
+        )
     )
-    parser.add_argument("--host", required=True, help="IPv4 address of the CETUS EXE computer")
+    parser.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        help="bind address for the WebSocket server (default: 0.0.0.0)",
+    )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--hz", type=float, default=DEFAULT_HZ)
     parser.add_argument("--loop", action="store_true", help="repeat after the final CSV row")
@@ -202,12 +277,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        frames = send_trajectory(
-            host=args.host,
-            port=args.port,
-            hz=args.hz,
-            should_loop=args.loop,
-            trajectory_dir=args.trajectory_dir,
+        frames = asyncio.run(
+            send_trajectory(
+                host=args.host,
+                port=args.port,
+                hz=args.hz,
+                should_loop=args.loop,
+                trajectory_dir=args.trajectory_dir,
+            )
         )
     except KeyboardInterrupt:
         print("Stopped by user.")
@@ -215,7 +292,7 @@ def main() -> int:
     except (OSError, ValueError) as error:
         print(f"Error: {error}")
         return 1
-    print(f"Sent {frames} complete fleet frames to {args.host}:{args.port}.")
+    print(f"Broadcast {frames} complete fleet frames on ws://{args.host}:{args.port}.")
     return 0
 
 

@@ -3,7 +3,7 @@ import { useFleetStore } from '@/store/usvStore'
 
 /**
  * mock 舰队驱动：按 rAF 推进编队时间并写入 store。
- * 后期接 WebSocket + Tauri 后，停止挂载此 hook，改由 ws 消息驱动 `ingestLive`
+ * 收到 WebSocket 首帧后由 `useFleetRuntime` 关闭此 hook。
  */
 export function useMockFleet(enabled = true) {
   const tickMock = useFleetStore((s) => s.tickMock)

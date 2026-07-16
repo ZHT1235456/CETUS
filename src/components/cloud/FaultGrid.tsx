@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react'
 import { FLEET, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
-import { Badge, Dot, Progress } from '@/components/ui'
+import { Badge, Button, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { FaultUnit } from './types'
 
@@ -119,17 +120,38 @@ export function FaultGrid() {
   const source = useFleetStore((s) => s.source)
   const receiver = useFleetStore((s) => s.receiver)
   const receiverError = useFleetStore((s) => s.receiverError)
+  const fleetHost = useFleetStore((s) => s.fleetHost)
+  const fleetPort = useFleetStore((s) => s.fleetPort)
+  const setFleetEndpoint = useFleetStore((s) => s.setFleetEndpoint)
+
+  const [hostDraft, setHostDraft] = useState(fleetHost)
+  const [portDraft, setPortDraft] = useState(String(fleetPort))
+  const [endpointError, setEndpointError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setHostDraft(fleetHost)
+    setPortDraft(String(fleetPort))
+  }, [fleetHost, fleetPort])
+
+  const applyEndpoint = () => {
+    try {
+      setFleetEndpoint(hostDraft, portDraft)
+      setEndpointError(null)
+    } catch (error) {
+      setEndpointError(error instanceof Error ? error.message : String(error))
+    }
+  }
 
   const connectionBadge: {
     tone: 'ok' | 'warn' | 'alert' | 'ghost'
     label: string
   } =
     receiver.state === 'timedOut'
-      ? { tone: 'warn', label: 'UDP · TIMEOUT' }
+      ? { tone: 'warn', label: 'WS · TIMEOUT' }
       : receiver.state === 'error'
-        ? { tone: 'alert', label: 'UDP · ERROR' }
+        ? { tone: 'alert', label: 'WS · ERROR' }
         : source === 'live'
-          ? { tone: 'ok', label: 'LIVE · UDP' }
+          ? { tone: 'ok', label: 'LIVE · WS' }
           : { tone: 'ghost', label: 'MOCK' }
 
   const avg =
@@ -167,20 +189,66 @@ export function FaultGrid() {
                 : `全部正常`}
             </span>
           </div>
-          {receiver.state !== 'idle' && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-4 font-mono text-[10.5px] text-ink-faint">
-              <span>{receiver.bindAddress}</span>
-              <span>来源 {receiver.sender ?? '等待中'}</span>
-              <span>丢弃 {receiver.droppedPackets}</span>
+
+          <form
+            className="mt-1 flex flex-col gap-1.5"
+            onSubmit={(event) => {
+              event.preventDefault()
+              applyEndpoint()
+            }}
+          >
+            <div className="chip text-ink-faint">发送端（局域网 IP）</div>
+            <div className="flex items-center gap-1.5">
+              <input
+                value={hostDraft}
+                onChange={(event) => setHostDraft(event.target.value)}
+                placeholder="192.168.1.10"
+                spellCheck={false}
+                autoComplete="off"
+                className="h-8 min-w-0 flex-1 rounded-sm border border-line-soft bg-surface/80 px-2 font-mono text-[11.5px] text-ink outline-none ring-primary/30 placeholder:text-ink-faint focus:border-primary/40 focus:ring-1"
+              />
+              <input
+                value={portDraft}
+                onChange={(event) => setPortDraft(event.target.value)}
+                placeholder="5005"
+                inputMode="numeric"
+                spellCheck={false}
+                autoComplete="off"
+                className="h-8 w-[4.5rem] shrink-0 rounded-sm border border-line-soft bg-surface/80 px-2 font-mono text-[11.5px] text-ink outline-none ring-primary/30 placeholder:text-ink-faint focus:border-primary/40 focus:ring-1"
+              />
+              <Button type="submit" size="sm" variant="outline" className="shrink-0 px-2.5">
+                连接
+              </Button>
             </div>
+          </form>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-ink-faint">
+            <span>{receiver.bindAddress}</span>
+            {receiver.state !== 'idle' && (
+              <>
+                <span>
+                  {receiver.state === 'live'
+                    ? '已同步'
+                    : receiver.state === 'listening'
+                      ? '连接中'
+                      : receiver.state === 'timedOut'
+                        ? '等待恢复'
+                        : receiver.state}
+                </span>
+                <span>丢弃 {receiver.droppedPackets}</span>
+              </>
+            )}
+          </div>
+          {endpointError && (
+            <div className="font-mono text-[10.5px] text-accent">{endpointError}</div>
           )}
           {receiver.state === 'listening' && source === 'mock' && (
-            <div className="pl-4 text-[11px] text-warn">
-              首次运行请在 Windows 提示中允许“专用网络”
+            <div className="text-[11px] text-warn">
+              等待 WebSocket 首帧；填写运行 Python 发送端的电脑 IP 后点「连接」
             </div>
           )}
           {receiverError && (
-            <div className="truncate pl-4 font-mono text-[10.5px] text-accent" title={receiverError}>
+            <div className="truncate font-mono text-[10.5px] text-accent" title={receiverError}>
               {receiverError}
             </div>
           )}

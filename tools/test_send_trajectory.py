@@ -39,17 +39,23 @@ class TrajectorySenderTests(unittest.TestCase):
         self.assertAlmostEqual(heading, math.atan2(4.0, 3.0))
         self.assertAlmostEqual(speed, 10.0)
 
+    def test_heading_skips_duplicate_points_toward_next_move(self) -> None:
+        points = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (3.0, 4.0)]
+        heading, speed = sender.heading_and_speed(points, 1, 1.0)
+        self.assertAlmostEqual(heading, math.atan2(4.0, 3.0))
+        self.assertAlmostEqual(speed, 0.0)
+
     def test_single_and_loop_playback_indices(self) -> None:
         self.assertEqual(list(sender.frame_indices(3, False)), [0, 1, 2])
         looped = list(itertools.islice(sender.frame_indices(3, True), 8))
         self.assertEqual(looped, [0, 1, 2, 0, 1, 2, 0, 1])
 
-    def test_json_is_complete_and_below_datagram_limit(self) -> None:
+    def test_json_is_complete_and_below_frame_limit(self) -> None:
         trajectories = {
             vessel_id: [(1.25, 2.5), (2.25, 3.5)]
             for vessel_id in sender.FLEET_IDS
         }
-        encoded = sender.build_datagram(
+        encoded = sender.build_frame(
             trajectories,
             index=0,
             hz=20,
@@ -58,7 +64,7 @@ class TrajectorySenderTests(unittest.TestCase):
             sent_at_ms=123,
         )
         payload = json.loads(encoded)
-        self.assertLessEqual(len(encoded), sender.MAX_DATAGRAM_BYTES)
+        self.assertLessEqual(len(encoded.encode("utf-8")), sender.MAX_FRAME_BYTES)
         self.assertEqual(payload["version"], 1)
         self.assertEqual(payload["type"], "fleet")
         self.assertEqual(payload["seq"], 7)

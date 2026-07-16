@@ -13,7 +13,7 @@ export interface USVConfig {
   formation: 'A' | 'B'
 }
 
-/** 单艇实时姿态 — 对方坐标系（经 WebSocket / Tauri 接入）
+/** 单艇实时姿态 — 对方坐标系（经 WebSocket 接入）
  *  x = 北，y = 东，z = 天。渲染时经 toScenePosition 映射到 Three.js。 */
 export interface USVState {
   id: USVId
@@ -62,7 +62,7 @@ export interface WireFleetUnitV1 {
   health: number
 }
 
-/** Python sender -> Rust receiver 的 UDP V1 完整帧。 */
+/** Python sender -> 前端的 WebSocket V1 完整帧。 */
 export interface WireFleetDatagramV1 {
   version: 1
   type: 'fleet'
@@ -76,6 +76,7 @@ export type ReceiverState = 'idle' | 'listening' | 'live' | 'timedOut' | 'stoppe
 
 export interface ReceiverStatus {
   state: ReceiverState
+  /** 当前连接的 WebSocket URL */
   bindAddress: string
   sender: string | null
   lastPacketAtMs: number | null

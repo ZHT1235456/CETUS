@@ -9,7 +9,7 @@ export default function Architecture() {
           <div>
             <div className="label-eyebrow">Topology · Tree</div>
             <h3 className="mt-1 font-display text-[22px] font-600 text-ink">
-              云·边·端 三级拓扑
+              云·边·端
             </h3>
           </div>
         </header>

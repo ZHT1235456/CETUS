@@ -10,14 +10,14 @@ export default function Cloud() {
 
   const receiverView =
     receiver.state === 'live'
-      ? { tone: 'ok' as const, text: `LIVE — ${receiver.sender ?? '局域网发送端'}` }
+      ? { tone: 'ok' as const, text: `LIVE — ${receiver.bindAddress}` }
       : receiver.state === 'timedOut'
         ? { tone: 'warn' as const, text: 'TIMEOUT — 已冻结最后一帧，等待发送恢复' }
         : receiver.state === 'error'
-          ? { tone: 'alert' as const, text: 'ERROR — UDP 接收器启动失败' }
+          ? { tone: 'alert' as const, text: 'ERROR — WebSocket 连接失败' }
           : receiver.state === 'listening'
-            ? { tone: 'warn' as const, text: 'LISTENING — 首帧前继续播放内置轨迹' }
-            : { tone: 'ghost' as const, text: 'BROWSER — 内置轨迹回放' }
+            ? { tone: 'warn' as const, text: 'CONNECTING — 首帧前继续播放内置轨迹' }
+            : { tone: 'ghost' as const, text: 'IDLE — 内置轨迹回放' }
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -34,7 +34,7 @@ export default function Cloud() {
             </div>
             <span className="h-4 w-px bg-line" />
             {source === 'live' ? (
-              <Badge tone="ok">UDP 完整帧</Badge>
+              <Badge tone="ok">WebSocket 完整帧</Badge>
             ) : (
               <Badge tone="water">
                 CSV 回放 · {TRAJECTORY_SAMPLE_INTERVAL_SECONDS}s/点
@@ -52,7 +52,7 @@ export default function Cloud() {
 
         <div className="pointer-events-none absolute bottom-5 left-6 z-10 fade-in" style={{ animationDelay: '0.18s' }}>
           <div className="panel-flat flex items-center gap-3 rounded-md px-4 py-2.5 shadow-1">
-            <span className="label-eyebrow">UDP · Tauri</span>
+            <span className="label-eyebrow">WS · {receiver.bindAddress}</span>
             <span className="h-4 w-px bg-line" />
             <span className={`flex items-center gap-1.5 font-mono text-[12px] ${
               receiverView.tone === 'ok'

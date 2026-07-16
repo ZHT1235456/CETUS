@@ -4,7 +4,6 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
 import { Crosshair, Move, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
-import { trajectoryAt } from '@/lib/fleetReplay'
 import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
 import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
@@ -97,6 +96,7 @@ export function CloudScene() {
     controls.maxDistance = 220
     controls.maxPolarAngle = THREE.MathUtils.degToRad(89.5)
     controls.enablePan = false
+    controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE
     controls.target.copy(startPose.target)
 
     const sunDir = sunPosition()
@@ -107,7 +107,6 @@ export function CloudScene() {
     const boats: Boat[] = []
     const clock = new THREE.Clock()
     let t = 0
-    let lastStorePush = 0
     let water: Awaited<ReturnType<typeof buildWater>> | null = null
 
     let camState: CameraState = { kind: 'free', mode: 'overview' }
@@ -139,8 +138,6 @@ export function CloudScene() {
     controls.addEventListener('change', capturePanOffset)
     controls.addEventListener('end', finishInteraction)
 
-    const tick = useFleetStore.getState().tickMock
-
     const applyFreeView = (mode: ViewMode) => {
       controls.enabled = true
       freeViewOffset.set(0, 0, 0)
@@ -159,6 +156,7 @@ export function CloudScene() {
       setPanEnabled: (v) => {
         isPanEnabled = v
         controls.enablePan = v
+        controls.mouseButtons.LEFT = v ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE
         if (!v) freeViewOffset.set(0, 0, 0)
       },
       setCameraState: (s) => {
@@ -177,16 +175,19 @@ export function CloudScene() {
       raf = requestAnimationFrame(loop)
       const dt = Math.min(clock.getDelta(), 0.05)
       t += dt
-      const km = trajectoryAt(t)
+      const frame = useFleetStore.getState().frame
       fleetCenter.set(0, 0, 0)
       let positionedBoats = 0
       if (water) water.material.uniforms['time'].value += dt * 0.5
 
       for (const b of boats) {
-        const k = km[b.id]
-        if (!k) continue
-        const pos = toScenePosition({ x: k.x, y: k.y, z: 0 }, b.model.yOffset)
-        const fwd = toSceneForward(k.fx, k.fy)
+        const unit = frame[b.id]
+        if (!unit) continue
+        const pos = toScenePosition(
+          { x: unit.x, y: unit.y, z: unit.z },
+          b.model.yOffset,
+        )
+        const fwd = toSceneForward(Math.cos(unit.heading), Math.sin(unit.heading))
         b.group.position.set(pos.x, pos.y, pos.z)
         fleetCenter.x += pos.x
         fleetCenter.z += pos.z
@@ -196,6 +197,7 @@ export function CloudScene() {
         b.sceneFz = fwd.fz
         const state: BoatKinematicState = {
           x: pos.x,
+          // 船模带有自身的垂直校准偏移，尾迹必须独立锚定在水面。
           y: 0,
           z: pos.z,
           fx: fwd.fx,
@@ -242,10 +244,6 @@ export function CloudScene() {
         }
       }
 
-      if (t - lastStorePush > 0.25) {
-        lastStorePush = t
-        tick(t)
-      }
       controls.update()
       renderer.render(scene, camera)
       labelRenderer.render(scene, camera)
@@ -375,7 +373,7 @@ export function CloudScene() {
               'panel-flat flex items-center gap-2 rounded-md px-3 py-2 shadow-1 transition-colors',
               panEnabled ? 'text-primary' : 'text-ink-faint',
             )}
-            title="开启后可用鼠标右键拖拽平移视角"
+            title="开启后用鼠标左键直接拖拽平移视角"
           >
             <Move className="h-3.5 w-3.5" strokeWidth={1.8} />
             <span className="font-display text-[12.5px] font-600">

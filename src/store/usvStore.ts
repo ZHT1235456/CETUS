@@ -1,13 +1,18 @@
 import { create } from 'zustand'
-import type { FleetFrame, FleetMessage, USVId } from '@/types/usv'
+import type {
+  FleetFrame,
+  FleetMessage,
+  ReceiverStatus,
+  USVId,
+} from '@/types/usv'
 import { FLEET } from '@/config/fleet'
 import { frameAt } from '@/lib/fleetReplay'
 
 const EMPTY_FRAME = (): FleetFrame => {
-  const f = {} as FleetFrame
-  for (const u of FLEET) {
-    f[u.id] = {
-      id: u.id,
+  const frame = {} as FleetFrame
+  for (const unit of FLEET) {
+    frame[unit.id] = {
+      id: unit.id,
       x: 0,
       y: 0,
       z: 0,
@@ -17,39 +22,59 @@ const EMPTY_FRAME = (): FleetFrame => {
       health: 100,
     }
   }
-  return f
+  return frame
+}
+
+const INITIAL_RECEIVER: ReceiverStatus = {
+  state: 'idle',
+  bindAddress: '0.0.0.0:5005',
+  sender: null,
+  lastPacketAtMs: null,
+  droppedPackets: 0,
 }
 
 interface FleetStore {
-  /** 数据来源：'mock' | 'live'（live = WebSocket/Tauri 接入后切换） */
   source: 'mock' | 'live'
-  /** WS 隧道状态 */
-  wsConnected: boolean
+  hasReceivedLive: boolean
   frame: FleetFrame
-  /** 最近一次更新（秒） */
   updatedAt: number
+  receiver: ReceiverStatus
+  receiverError: string | null
 
-  /** 由 mock 驱动逐帧更新 */
   tickMock: (t: number) => void
-  /** 由 WS/Tauri 注入实时帧（待扩展接口） */
-  ingestLive: (msg: FleetMessage) => void
-  setSource: (s: 'mock' | 'live') => void
-  setWsConnected: (v: boolean) => void
+  ingestLive: (message: FleetMessage) => void
+  updateReceiver: (status: ReceiverStatus) => void
+  setReceiverError: (message: string | null, fatal?: boolean) => void
 }
 
 export const useFleetStore = create<FleetStore>((set) => ({
   source: 'mock',
-  wsConnected: false,
+  hasReceivedLive: false,
   frame: EMPTY_FRAME(),
   updatedAt: 0,
+  receiver: INITIAL_RECEIVER,
+  receiverError: null,
 
-  tickMock: (t) => set({ frame: frameAt(t), updatedAt: t, source: 'mock' }),
-  ingestLive: (msg) =>
-    set({ frame: msg.frame, updatedAt: msg.timestamp, source: 'live' }),
-  setSource: (s) => set({ source: s }),
-  setWsConnected: (v) => set({ wsConnected: v }),
+  tickMock: (t) =>
+    set((state) =>
+      state.hasReceivedLive
+        ? state
+        : { frame: frameAt(t), updatedAt: t, source: 'mock' },
+    ),
+  ingestLive: (message) =>
+    set({
+      frame: message.frame,
+      updatedAt: message.timestamp,
+      source: 'live',
+      hasReceivedLive: true,
+      receiverError: null,
+    }),
+  updateReceiver: (receiver) => set({ receiver }),
+  setReceiverError: (message, fatal = false) =>
+    set((state) => ({
+      receiverError: message,
+      receiver: fatal ? { ...state.receiver, state: 'error' } : state.receiver,
+    })),
 }))
 
-/** 便捷 selector：单艇状态 */
-export const useUnit = (id: USVId) =>
-  useFleetStore((s) => s.frame[id])
+export const useUnit = (id: USVId) => useFleetStore((state) => state.frame[id])

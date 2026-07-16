@@ -1,4 +1,3 @@
-import { useMockFleet } from '@/hooks/useMockFleet'
 import { EDGE_FORMATIONS, FLEET_BY_ID, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
 import { Badge, Dot, Progress } from '@/components/ui'
@@ -6,7 +5,6 @@ import { cn } from '@/lib/utils'
 import type { USVId } from '@/types/usv'
 
 export default function Edge() {
-  useMockFleet(true)
   return (
     <div className="relative flex h-full w-full flex-col px-7 pt-5 pb-6">
       <header className="mb-4 flex items-end justify-between">

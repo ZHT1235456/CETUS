@@ -51,3 +51,38 @@ export interface FleetMessage {
   timestamp: number
   frame: FleetFrame
 }
+
+export interface WireFleetUnitV1 {
+  x: number
+  y: number
+  z: number
+  heading: number
+  speed: number
+  isFault: boolean
+  health: number
+}
+
+/** Python sender -> Rust receiver 的 UDP V1 完整帧。 */
+export interface WireFleetDatagramV1 {
+  version: 1
+  type: 'fleet'
+  streamId: string
+  seq: number
+  sentAtMs: number
+  frame: Record<USVId, WireFleetUnitV1>
+}
+
+export type ReceiverState = 'idle' | 'listening' | 'live' | 'timedOut' | 'stopped' | 'error'
+
+export interface ReceiverStatus {
+  state: ReceiverState
+  bindAddress: string
+  sender: string | null
+  lastPacketAtMs: number | null
+  droppedPackets: number
+}
+
+export type FleetReceiverEvent =
+  | { kind: 'frame'; payload: FleetMessage }
+  | { kind: 'status'; payload: ReceiverStatus }
+  | { kind: 'error'; payload: { message: string } }

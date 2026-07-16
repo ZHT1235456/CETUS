@@ -1,9 +1,7 @@
 import { SwarmTree } from '@/components/architecture/SwarmTree'
 import { DomainPanel } from '@/components/architecture/DomainPanel'
-import { useMockFleet } from '@/hooks/useMockFleet'
 
 export default function Architecture() {
-  useMockFleet(true)
   return (
     <div className="flex h-full w-full">
       <section className="relative flex h-full w-3/4 min-w-0 flex-col">

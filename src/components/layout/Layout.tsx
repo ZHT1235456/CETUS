@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
+import { useFleetRuntime } from '@/hooks/useFleetRuntime'
 
 const TITLES: Record<string, { zh: string; en: string; sub: string }> = {
   '/architecture': {
@@ -26,6 +27,7 @@ const TITLES: Record<string, { zh: string; en: string; sub: string }> = {
 }
 
 export function Layout() {
+  useFleetRuntime()
   const { pathname } = useLocation()
   const match = TITLES[pathname] ?? TITLES['/architecture']
 

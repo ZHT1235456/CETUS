@@ -117,6 +117,20 @@ function Readout({
 export function FaultGrid() {
   const frame = useFleetStore((s) => s.frame)
   const source = useFleetStore((s) => s.source)
+  const receiver = useFleetStore((s) => s.receiver)
+  const receiverError = useFleetStore((s) => s.receiverError)
+
+  const connectionBadge: {
+    tone: 'ok' | 'warn' | 'alert' | 'ghost'
+    label: string
+  } =
+    receiver.state === 'timedOut'
+      ? { tone: 'warn', label: 'UDP · TIMEOUT' }
+      : receiver.state === 'error'
+        ? { tone: 'alert', label: 'UDP · ERROR' }
+        : source === 'live'
+          ? { tone: 'ok', label: 'LIVE · UDP' }
+          : { tone: 'ghost', label: 'MOCK' }
 
   const avg =
     FLEET.reduce((a, u) => a + frame[u.id].health, 0) / FLEET.length
@@ -129,9 +143,7 @@ export function FaultGrid() {
           <div>
             <div className="flex items-center gap-2">
               <span className="label-eyebrow">Fleet Health</span>
-              <Badge tone={source === 'live' ? 'ok' : 'ghost'}>
-                {source === 'live' ? 'LIVE · WS' : 'MOCK · 待扩展'}
-              </Badge>
+              <Badge tone={connectionBadge.tone}>{connectionBadge.label}</Badge>
             </div>
             <h3 className="mt-0.5 font-display text-[17px] font-600 text-ink">
               编队故障与健康管理
@@ -155,7 +167,23 @@ export function FaultGrid() {
                 : `全部正常`}
             </span>
           </div>
-
+          {receiver.state !== 'idle' && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-4 font-mono text-[10.5px] text-ink-faint">
+              <span>{receiver.bindAddress}</span>
+              <span>来源 {receiver.sender ?? '等待中'}</span>
+              <span>丢弃 {receiver.droppedPackets}</span>
+            </div>
+          )}
+          {receiver.state === 'listening' && source === 'mock' && (
+            <div className="pl-4 text-[11px] text-warn">
+              首次运行请在 Windows 提示中允许“专用网络”
+            </div>
+          )}
+          {receiverError && (
+            <div className="truncate pl-4 font-mono text-[10.5px] text-accent" title={receiverError}>
+              {receiverError}
+            </div>
+          )}
         </div>
 
         <div className="hairline my-3.5" />

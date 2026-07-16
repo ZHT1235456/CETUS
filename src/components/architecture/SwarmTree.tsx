@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import {
   ReactFlow,
   Background,
-  Controls,
   MarkerType,
   type Node,
   type Edge,
@@ -121,9 +120,15 @@ export function SwarmTree() {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
-        zoomOnScroll={true}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
         zoomOnDoubleClick={false}
-        panOnDrag={true}
+        panOnDrag={false}
+        panOnScroll={false}
+        panActivationKeyCode={null}
+        zoomActivationKeyCode={null}
+        autoPanOnNodeFocus={false}
+        preventScrolling={false}
         fitView
         fitViewOptions={{ padding: 0.18, includeHiddenNodes: true, minZoom: 0.55, maxZoom: 1.2 }}
         proOptions={{ hideAttribution: true }}
@@ -136,7 +141,6 @@ export function SwarmTree() {
           color="rgba(127,168,204,0.22)"
           style={{ maskImage: 'radial-gradient(circle at 50% 40%, #000 0%, transparent 85%)' }}
         />
-        <Controls showInteractive={false} />
       </ReactFlow>
 
       {/* legend */}

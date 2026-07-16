@@ -1,6 +1,7 @@
 import { CloudScene } from '@/components/cloud/CloudScene'
 import { FaultGrid } from '@/components/cloud/FaultGrid'
 import { Badge, Dot } from '@/components/ui'
+import { TRAJECTORY_SAMPLE_INTERVAL_SECONDS } from '@/lib/trajectory'
 
 export default function Cloud() {
   return (
@@ -13,11 +14,13 @@ export default function Cloud() {
             <div className="flex items-center gap-2">
               <Dot tone="ok" pulse />
               <span className="font-display text-[14px] font-600 text-ink">
-                六艇正六边形编队
+                六艇轨迹回放
               </span>
             </div>
             <span className="h-4 w-px bg-line" />
-            <Badge tone="water">逆时针 · 慢转</Badge>
+            <Badge tone="water">
+              CSV 回放 · {TRAJECTORY_SAMPLE_INTERVAL_SECONDS}s/点
+            </Badge>
             <Badge tone="ghost">4× 实艇 · 2× 虚艇</Badge>
           </div>
         </div>

@@ -1,5 +1,4 @@
-import { FLEET, FORMATION_RADIUS, roleLabel } from '@/config/fleet'
-import { FORMATION_OMEGA } from '@/lib/formation'
+import { FLEET, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
 import { Badge, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'

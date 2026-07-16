@@ -4,7 +4,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
 import { Crosshair, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
-import { formationAt } from '@/lib/formation'
+import { trajectoryAt } from '@/lib/fleetReplay'
 import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
 import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
@@ -142,7 +142,7 @@ export function CloudScene() {
       raf = requestAnimationFrame(loop)
       const dt = Math.min(clock.getDelta(), 0.05)
       t += dt
-      const km = formationAt(t)
+      const km = trajectoryAt(t)
       if (water) water.material.uniforms['time'].value += dt * 0.5
 
       for (const b of boats) {

@@ -1,13 +1,7 @@
-import { FORMATION_RADIUS, FLEET } from '@/config/fleet'
-import { THEIR_CENTER } from '@/lib/coords'
+/** CSV 轨迹回放到舰队状态的组装边界。 */
+import { FLEET } from '@/config/fleet'
+import { sampleTrajectory } from '@/lib/trajectory'
 import type { FleetFrame, USVId } from '@/types/usv'
-
-/** 编队圆心（对方：北 / 东） */
-export const FORMATION_CENTER = { x: THEIR_CENTER.x, y: THEIR_CENTER.y }
-/** 编队旋转角速度（弧度/秒），逆时针慢转；半径增大后略降 */
-export const FORMATION_OMEGA = 0.035
-/** 各艇沿编队方向的额外前进微动（单位/秒） */
-export const BOAT_FORWARD = 0.0
 
 export interface BoatKinematics {
   id: USVId
@@ -22,27 +16,14 @@ export interface BoatKinematics {
   speed: number
 }
 
-const toRad = (d: number) => (d * Math.PI) / 180
-
 /**
- * 计算 t 时刻的编队运动学（对方水平面：X 北 / Y 东）。
- * - 整体编队绕中心逆时针慢转 ωt
- * - 每艇沿切线方向航行，航速 = R·ω
- * 后续接 WS 实时位姿时，停止调用此函数即可。
+ * 从导入的 CSV 轨迹计算 t 时刻的编队运动学（对方水平面：X 北 / Y 东）。
+ * CSV 没有时间列，按配置的回放步长采样；点间线性插值，抵达末点后停止。
  */
-export function formationAt(t: number): Record<USVId, BoatKinematics> {
-  const ω = FORMATION_OMEGA
+export function trajectoryAt(t: number): Record<USVId, BoatKinematics> {
   const out = {} as Record<USVId, BoatKinematics>
   for (const u of FLEET) {
-    const φ = toRad(u.angleDeg) + ω * t
-    const x = FORMATION_CENTER.x + Math.cos(φ) * FORMATION_RADIUS
-    const y = FORMATION_CENTER.y + Math.sin(φ) * FORMATION_RADIUS
-    // 切线方向（逆时针）：d/dφ (cosφ, sinφ) = (-sinφ, cosφ) → (北, 东)
-    const fx = -Math.sin(φ)
-    const fy = Math.cos(φ)
-    const heading = Math.atan2(fy, fx)
-    const speed = FORMATION_RADIUS * ω + BOAT_FORWARD
-    out[u.id] = { id: u.id, x, y, fx, fy, heading, speed }
+    out[u.id] = { id: u.id, ...sampleTrajectory(u.id, t) }
   }
   return out
 }
@@ -61,7 +42,7 @@ export function mockFaultAt(t: number): Record<USVId, { isFault: boolean; health
 
 /** 组装成完整 FleetFrame（对方：X 北 / Y 东 / Z 天） */
 export function frameAt(t: number): FleetFrame {
-  const k = formationAt(t)
+  const k = trajectoryAt(t)
   const f = mockFaultAt(t)
   const frame = {} as FleetFrame
   for (const idStr of Object.keys(k) as USVId[]) {

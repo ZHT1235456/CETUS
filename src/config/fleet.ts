@@ -69,6 +69,3 @@ export function roleLabel(role: USVConfig['role']): string {
   if (role === 'virtual') return '虚艇'
   return '跟随艇'
 }
-
-/** 编队半径（对方水平面单位）；短边跨度 60，留边取 24 */
-export const FORMATION_RADIUS = 24

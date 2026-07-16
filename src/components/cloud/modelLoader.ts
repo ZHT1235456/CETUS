@@ -14,7 +14,7 @@ export interface BoatModel {
   beam: number
   /** 漂浮于水面所需的竖直偏移：使 hull 底面贴近 y=0 */
   yOffset: number
-  /** prototype 已标准化：几何中心位于原点，沿 +z 为船首方向 */
+  /** prototype 已标准化：几何中心位于原点，沿 -x 为船首方向 */
   scale: number
 }
 
@@ -26,7 +26,7 @@ function bakePrototype(gltf: any): BoatModel {
   const center = box.getCenter(new THREE.Vector3())
   // 居中到原点
   grp.position.sub(center)
-  // 缩放到目标船长（取 z 为主轴）
+  // 模型默认沿 X 轴纵向，缩放到目标船长
   const srcLen = Math.max(size.z, size.x, 0.001)
   const scale = TARGET_LENGTH / srcLen
   grp.scale.setScalar(scale)
@@ -45,8 +45,8 @@ function bakePrototype(gltf: any): BoatModel {
   return {
     kind: grp.userData.kind ?? 'textured',
     prototype: grp,
-    length: nSize.z,
-    beam: nSize.x,
+    length: nSize.x,
+    beam: nSize.z,
     // 略下沉：底面越过 y=0，形成更自然的吃水
     yOffset: nSize.y / 2 - HULL_DRAFT,
     scale,

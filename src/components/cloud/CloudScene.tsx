@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
-import { Crosshair, Tags } from 'lucide-react'
+import { Crosshair, Move, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
 import { trajectoryAt } from '@/lib/fleetReplay'
 import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
@@ -43,16 +43,22 @@ export function CloudScene() {
   const hostRef = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading')
   const [showLabels, setShowLabels] = useState(true)
+  const [panEnabled, setPanEnabled] = useState(false)
   const [cameraState, setCameraState] = useState<CameraState>({ kind: 'free', mode: 'overview' })
 
   const apiRef = useRef<{
     setLabelsVisible: (v: boolean) => void
+    setPanEnabled: (v: boolean) => void
     setCameraState: (s: CameraState) => void
   } | null>(null)
 
   useEffect(() => {
     apiRef.current?.setLabelsVisible(showLabels)
   }, [showLabels])
+
+  useEffect(() => {
+    apiRef.current?.setPanEnabled(panEnabled)
+  }, [panEnabled])
 
   useEffect(() => {
     apiRef.current?.setCameraState(cameraState)
@@ -112,16 +118,32 @@ export function CloudScene() {
     }
     const fleetCenter = new THREE.Vector3()
     const centerDelta = new THREE.Vector3()
+    const freeViewOffset = new THREE.Vector3()
+    const desiredTarget = new THREE.Vector3()
+    let isInteracting = false
+    let isPanEnabled = false
 
     const cancelFreeViewTransition = () => {
+      isInteracting = true
       if (camState.kind === 'free') camGoal.active = false
     }
+    const capturePanOffset = () => {
+      if (isInteracting && isPanEnabled && camState.kind === 'free') {
+        freeViewOffset.copy(controls.target).sub(fleetCenter)
+      }
+    }
+    const finishInteraction = () => {
+      isInteracting = false
+    }
     controls.addEventListener('start', cancelFreeViewTransition)
+    controls.addEventListener('change', capturePanOffset)
+    controls.addEventListener('end', finishInteraction)
 
     const tick = useFleetStore.getState().tickMock
 
     const applyFreeView = (mode: ViewMode) => {
       controls.enabled = true
+      freeViewOffset.set(0, 0, 0)
       controls.maxPolarAngle =
         mode === 'top' ? THREE.MathUtils.degToRad(89.8) : THREE.MathUtils.degToRad(86)
       const pose = fleetCameraPose(mode, cam)
@@ -133,6 +155,11 @@ export function CloudScene() {
     apiRef.current = {
       setLabelsVisible: (v) => {
         for (const b of boats) b.label.visible = v
+      },
+      setPanEnabled: (v) => {
+        isPanEnabled = v
+        controls.enablePan = v
+        if (!v) freeViewOffset.set(0, 0, 0)
       },
       setCameraState: (s) => {
         camState = s
@@ -208,9 +235,10 @@ export function CloudScene() {
             camGoal.active = false
           }
         } else {
-          centerDelta.copy(fleetCenter).sub(controls.target)
+          desiredTarget.copy(fleetCenter).add(freeViewOffset)
+          centerDelta.copy(desiredTarget).sub(controls.target)
           camera.position.add(centerDelta)
-          controls.target.copy(fleetCenter)
+          controls.target.copy(desiredTarget)
         }
       }
 
@@ -304,6 +332,8 @@ export function CloudScene() {
       cancelAnimationFrame(raf)
       ro.disconnect()
       controls.removeEventListener('start', cancelFreeViewTransition)
+      controls.removeEventListener('change', capturePanOffset)
+      controls.removeEventListener('end', finishInteraction)
       controls.dispose()
       for (const b of boats) {
         b.wake.dispose(scene)
@@ -338,6 +368,20 @@ export function CloudScene() {
 
       {phase === 'ready' && (
         <div className="pointer-events-auto absolute bottom-5 right-5 z-20 flex max-w-[min(100%,420px)] flex-col items-end gap-2 fade-in">
+          <button
+            type="button"
+            onClick={() => setPanEnabled((enabled) => !enabled)}
+            className={cn(
+              'panel-flat flex items-center gap-2 rounded-md px-3 py-2 shadow-1 transition-colors',
+              panEnabled ? 'text-primary' : 'text-ink-faint',
+            )}
+            title="开启后可用鼠标右键拖拽平移视角"
+          >
+            <Move className="h-3.5 w-3.5" strokeWidth={1.8} />
+            <span className="font-display text-[12.5px] font-600">
+              {panEnabled ? '平移 · 开' : '平移 · 关'}
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => setShowLabels((s) => !s)}

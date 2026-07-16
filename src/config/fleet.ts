@@ -2,7 +2,7 @@ import type { USVConfig, USVId } from '@/types/usv'
 
 /**
  * 6 艘艇呈正六边形编队，逆时针顺序：
- *   USV-1(实/跟随) → USV-5(虚艇) → USV-2(实/领航)
+ *   USV-1(虚艇) → USV-5(实/跟随) → USV-2(实/领航)
  *   → USV-3(实/领航) → USV-6(虚艇) → USV-4(实/跟随)
  *
  * 编队 A = {USV-1, USV-2, USV-5}，领航艇 USV-2
@@ -10,8 +10,8 @@ import type { USVConfig, USVId } from '@/types/usv'
  * 拓扑对齐 assets/diagram.jpg
  */
 export const FLEET: readonly USVConfig[] = [
-  { id: 'USV-1', model: 'textured',   angleDeg:   0, role: 'follower', formation: 'A' },
-  { id: 'USV-5', model: 'untextured', angleDeg:  60, role: 'virtual',  formation: 'A' },
+  { id: 'USV-1', model: 'untextured', angleDeg:   0, role: 'virtual',  formation: 'A' },
+  { id: 'USV-5', model: 'textured',   angleDeg:  60, role: 'follower', formation: 'A' },
   { id: 'USV-2', model: 'textured',   angleDeg: 120, role: 'leader',   formation: 'A' },
   { id: 'USV-3', model: 'textured',   angleDeg: 180, role: 'leader',   formation: 'B' },
   { id: 'USV-6', model: 'untextured', angleDeg: 240, role: 'virtual',  formation: 'B' },
@@ -40,7 +40,7 @@ export type EdgeLink = {
 
 /**
  * 边编队拓扑（对齐 assets/diagram.jpg）
- * A：领航 USV-2；B：领航 USV-3；USV-5 / USV-6 为虚艇
+ * A：领航 USV-2；B：领航 USV-3；USV-1 / USV-6 为虚艇
  */
 export const EDGE_FORMATIONS = {
   A: {

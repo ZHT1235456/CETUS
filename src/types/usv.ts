@@ -7,7 +7,7 @@ export interface USVConfig {
   model: ModelKind
   /** 逆时针序的编队槽位角度（度，0° = +x 北） */
   angleDeg: number
-  /** 领航艇 / 跟随艇 / 虚艇（USV-5、USV-6） */
+  /** 领航艇 / 跟随艇 / 虚艇（USV-1、USV-6） */
   role: 'leader' | 'follower' | 'virtual'
   /** 所属边编队 */
   formation: 'A' | 'B'

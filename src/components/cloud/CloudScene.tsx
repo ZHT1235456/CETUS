@@ -113,6 +113,11 @@ export function CloudScene() {
     const fleetCenter = new THREE.Vector3()
     const centerDelta = new THREE.Vector3()
 
+    const cancelFreeViewTransition = () => {
+      if (camState.kind === 'free') camGoal.active = false
+    }
+    controls.addEventListener('start', cancelFreeViewTransition)
+
     const tick = useFleetStore.getState().tickMock
 
     const applyFreeView = (mode: ViewMode) => {
@@ -297,6 +302,7 @@ export function CloudScene() {
       apiRef.current = null
       cancelAnimationFrame(raf)
       ro.disconnect()
+      controls.removeEventListener('start', cancelFreeViewTransition)
       controls.dispose()
       for (const b of boats) {
         b.wake.dispose(scene)

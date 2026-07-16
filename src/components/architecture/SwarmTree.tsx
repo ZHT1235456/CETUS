@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   ReactFlow,
   Background,
   MarkerType,
   type Node,
   type Edge,
+  type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { TreeNode, type TreeData } from './treeNodes'
@@ -107,11 +108,37 @@ function hostEdge(source: string, target: string): Edge {
 }
 
 const nodeTypes = { tree: TreeNode }
+const FIT_VIEW_OPTIONS = {
+  padding: 0.18,
+  includeHiddenNodes: true,
+  minZoom: 0.35,
+  maxZoom: 1.2,
+} as const
 
 export function SwarmTree() {
   const { nodes, edges } = useMemo(build, [])
+  const hostRef = useRef<HTMLDivElement>(null)
+  const flowRef = useRef<ReactFlowInstance<Node<TreeData, 'tree'>, Edge> | null>(null)
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+
+    let raf = 0
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => flowRef.current?.fitView(FIT_VIEW_OPTIONS))
+    })
+    observer.observe(host)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <div className="relative h-full w-full">
+    <div ref={hostRef} className="relative h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -129,8 +156,11 @@ export function SwarmTree() {
         zoomActivationKeyCode={null}
         autoPanOnNodeFocus={false}
         preventScrolling={false}
+        onInit={(instance) => {
+          flowRef.current = instance
+        }}
         fitView
-        fitViewOptions={{ padding: 0.18, includeHiddenNodes: true, minZoom: 0.55, maxZoom: 1.2 }}
+        fitViewOptions={FIT_VIEW_OPTIONS}
         proOptions={{ hideAttribution: true }}
         minZoom={0.35}
         maxZoom={1.6}

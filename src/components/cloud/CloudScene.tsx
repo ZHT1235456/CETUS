@@ -10,6 +10,7 @@ import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
 import type { USVId } from '@/types/usv'
 import { loadBoatModels, cloneBoat, headingToYRot, type BoatModel } from './modelLoader'
+import { BOAT_VISUAL_SCALE } from './sceneScale'
 import { applyRenderer, buildFog, buildLights, buildSky, buildWater, sunPosition } from './ocean'
 import { Wake, type BoatKinematicState } from './wake'
 import {
@@ -86,7 +87,7 @@ export function CloudScene() {
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.08
-    controls.minDistance = 8
+    controls.minDistance = 8 * BOAT_VISUAL_SCALE
     controls.maxDistance = 220
     controls.maxPolarAngle = THREE.MathUtils.degToRad(89.5)
     controls.enablePan = false
@@ -109,6 +110,8 @@ export function CloudScene() {
       target: startPose.target.clone(),
       active: false,
     }
+    const fleetCenter = new THREE.Vector3()
+    const centerDelta = new THREE.Vector3()
 
     const tick = useFleetStore.getState().tickMock
 
@@ -143,6 +146,8 @@ export function CloudScene() {
       const dt = Math.min(clock.getDelta(), 0.05)
       t += dt
       const km = trajectoryAt(t)
+      fleetCenter.set(0, 0, 0)
+      let positionedBoats = 0
       if (water) water.material.uniforms['time'].value += dt * 0.5
 
       for (const b of boats) {
@@ -151,6 +156,9 @@ export function CloudScene() {
         const pos = toScenePosition({ x: k.x, y: k.y, z: 0 }, b.model.yOffset)
         const fwd = toSceneForward(k.fx, k.fy)
         b.group.position.set(pos.x, pos.y, pos.z)
+        fleetCenter.x += pos.x
+        fleetCenter.z += pos.z
+        positionedBoats += 1
         b.group.rotation.y = headingToYRot(fwd.fx, fwd.fz)
         b.sceneFx = fwd.fx
         b.sceneFz = fwd.fz
@@ -166,6 +174,8 @@ export function CloudScene() {
         b.wake.update(state, dt, t)
       }
 
+      if (positionedBoats > 0) fleetCenter.multiplyScalar(1 / positionedBoats)
+
       if (camState.kind === 'track') {
         const trackId = camState.id
         const boat = boats.find((b) => b.id === trackId)
@@ -176,17 +186,26 @@ export function CloudScene() {
           camera.position.lerp(pose.position, a)
           controls.target.lerp(pose.target, a)
         }
-      } else if (camGoal.active) {
-        const a = 1 - Math.exp(-VIEW_LERP_SPEED * dt)
-        camera.position.lerp(camGoal.pos, a)
-        controls.target.lerp(camGoal.target, a)
-        if (
-          camera.position.distanceTo(camGoal.pos) < 0.08 &&
-          controls.target.distanceTo(camGoal.target) < 0.08
-        ) {
-          camera.position.copy(camGoal.pos)
-          controls.target.copy(camGoal.target)
-          camGoal.active = false
+      } else if (positionedBoats > 0) {
+        if (camGoal.active) {
+          const pose = fleetCameraPose(camState.mode, fleetCenter)
+          camGoal.pos.copy(pose.position)
+          camGoal.target.copy(pose.target)
+          const a = 1 - Math.exp(-VIEW_LERP_SPEED * dt)
+          camera.position.lerp(camGoal.pos, a)
+          controls.target.lerp(camGoal.target, a)
+          if (
+            camera.position.distanceTo(camGoal.pos) < 0.08 &&
+            controls.target.distanceTo(camGoal.target) < 0.08
+          ) {
+            camera.position.copy(camGoal.pos)
+            controls.target.copy(camGoal.target)
+            camGoal.active = false
+          }
+        } else {
+          centerDelta.copy(fleetCenter).sub(controls.target)
+          camera.position.add(centerDelta)
+          controls.target.copy(fleetCenter)
         }
       }
 
@@ -236,7 +255,11 @@ export function CloudScene() {
           const label = createBoatLabel(u)
           g.add(label)
           const halfBeam = Math.max(0.01, m.beam * 0.0225)
-          const wake = new Wake(scene, { halfBeam, lifeWindow: 3.25 })
+          const wake = new Wake(scene, {
+            halfBeam,
+            visualScale: BOAT_VISUAL_SCALE,
+            lifeWindow: 3.25,
+          })
           scene.add(g)
           boats.push({
             id: u.id,

@@ -2,8 +2,10 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MODEL_URL } from '@/config/fleet'
 import type { ModelKind } from '@/types/usv'
+import { BOAT_VISUAL_SCALE } from './sceneScale'
 
-const TARGET_LENGTH = 3.2
+const TARGET_LENGTH = 3.2 * BOAT_VISUAL_SCALE
+const HULL_DRAFT = 0.55 * BOAT_VISUAL_SCALE
 
 export interface BoatModel {
   kind: ModelKind
@@ -46,7 +48,7 @@ function bakePrototype(gltf: any): BoatModel {
     length: nSize.z,
     beam: nSize.x,
     // 略下沉：底面越过 y=0，形成更自然的吃水
-    yOffset: nSize.y / 2 - 0.55,
+    yOffset: nSize.y / 2 - HULL_DRAFT,
     scale,
   }
 }

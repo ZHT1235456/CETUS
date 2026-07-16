@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { roleLabel } from '@/config/fleet'
 import type { USVConfig, USVId } from '@/types/usv'
+import { BOAT_VISUAL_SCALE } from './sceneScale'
 
 /** 创建跟随艇位的 CSS2D 标签 */
 export function createBoatLabel(cfg: USVConfig): CSS2DObject {
@@ -18,7 +19,7 @@ export function createBoatLabel(cfg: USVConfig): CSS2DObject {
   else if (leader) el.classList.add('boat-label--leader')
 
   const obj = new CSS2DObject(el)
-  obj.position.set(0, 2.4, 0)
+  obj.position.set(0, 2.4 * BOAT_VISUAL_SCALE, 0)
   obj.visible = true
   return obj
 }
@@ -34,12 +35,20 @@ export function fleetCameraPose(
   const t = new THREE.Vector3(center.x, center.y, center.z)
   if (mode === 'top') {
     return {
-      position: new THREE.Vector3(center.x, center.y + 110, center.z + 0.05),
+      position: new THREE.Vector3(
+        center.x,
+        center.y + 110 * BOAT_VISUAL_SCALE,
+        center.z + 0.05 * BOAT_VISUAL_SCALE,
+      ),
       target: t,
     }
   }
   return {
-    position: new THREE.Vector3(center.x, center.y + 42, center.z + 58),
+    position: new THREE.Vector3(
+      center.x,
+      center.y + 42 * BOAT_VISUAL_SCALE,
+      center.z + 58 * BOAT_VISUAL_SCALE,
+    ),
     target: t,
   }
 }
@@ -58,9 +67,11 @@ export function trackCameraPose(
   const back = fwd.clone().multiplyScalar(-1)
   const position = boatPos
     .clone()
-    .add(back.multiplyScalar(16))
-    .add(up.clone().multiplyScalar(9))
-  const target = boatPos.clone().add(new THREE.Vector3(0, 2.2, 0))
+    .add(back.multiplyScalar(16 * BOAT_VISUAL_SCALE))
+    .add(up.clone().multiplyScalar(9 * BOAT_VISUAL_SCALE))
+  const target = boatPos
+    .clone()
+    .add(new THREE.Vector3(0, 2.2 * BOAT_VISUAL_SCALE, 0))
 
   return { position, target }
 }

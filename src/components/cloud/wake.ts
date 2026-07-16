@@ -46,6 +46,7 @@ export class Wake {
   private MAX_PART: number
   private lifeWindow: number
   private halfBeam: number
+  private visualScale: number
   private sampleEvery = 0.0
   private acc = 0
 
@@ -75,12 +76,22 @@ export class Wake {
 
   constructor(
     scene: THREE.Scene,
-    opts: { halfBeam: number; maxPts?: number; maxPart?: number; lifeWindow?: number },
+    opts: {
+      halfBeam: number
+      visualScale?: number
+      maxPts?: number
+      maxPart?: number
+      lifeWindow?: number
+    },
   ) {
     this.halfBeam = opts.halfBeam
+    this.visualScale = opts.visualScale ?? 1
+    if (!Number.isFinite(this.visualScale) || this.visualScale <= 0) {
+      throw new Error('Wake visualScale 必须是大于 0 的有限数值')
+    }
     this.MAX_PTS = opts.maxPts ?? 220
     this.MAX_PART = opts.maxPart ?? 600
-    this.lifeWindow = opts.lifeWindow ?? 6.5
+    this.lifeWindow = (opts.lifeWindow ?? 6.5) * this.visualScale
 
     // ── Ribbon ─────────────────────────────────────
     const maxVerts = (this.MAX_PTS - 1) * 4
@@ -255,17 +266,17 @@ export class Wake {
     let idx = this.partCursor
     this.partCursor = (this.partCursor + 1) % this.MAX_PART
     const i3 = idx * 3
-    this.partPos[i3 + 0] = stern.x + (Math.random() - 0.5) * 0.09
+    this.partPos[i3 + 0] = stern.x + (Math.random() - 0.5) * 0.09 * this.visualScale
     this.partPos[i3 + 1] = stern.y + 0.02
-    this.partPos[i3 + 2] = stern.z + (Math.random() - 0.5) * 0.09
+    this.partPos[i3 + 2] = stern.z + (Math.random() - 0.5) * 0.09 * this.visualScale
     const back = -0.5 - Math.random() * 0.4
     this.partVel[i3 + 0] = state.fx * back + (Math.random() - 0.5) * 0.2
     this.partVel[i3 + 1] = 0.025 + Math.random() * 0.04
     this.partVel[i3 + 2] = state.fz * back + (Math.random() - 0.5) * 0.2
-    const life = 0.6 + Math.random() * 0.5
+    const life = (0.6 + Math.random() * 0.5) * this.visualScale
     this.partLife[idx] = life
     this.partMaxLife[idx] = life
-    this.partSize[idx] = (0.6 + Math.random() * 0.8) * 3.0
+    this.partSize[idx] = (0.6 + Math.random() * 0.8) * 3.0 * this.visualScale
     this.partAlpha[idx] = 1
   }
 
@@ -282,7 +293,7 @@ export class Wake {
         this.partAlpha[i] = 0
         continue
       }
-      this.partVel[i3 + 1] -= 0.6 * dt
+      this.partVel[i3 + 1] -= (0.6 / this.visualScale) * dt
       this.partPos[i3 + 0] += this.partVel[i3 + 0] * dt
       this.partPos[i3 + 1] += this.partVel[i3 + 1] * dt
       this.partPos[i3 + 2] += this.partVel[i3 + 2] * dt

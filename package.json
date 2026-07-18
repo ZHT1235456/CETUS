@@ -9,7 +9,9 @@
     "typecheck": "tsc -b",
     "lint": "oxlint",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "icons": "tauri icon public/favicon.svg",
+    "build:exe": "node scripts/build-exe.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

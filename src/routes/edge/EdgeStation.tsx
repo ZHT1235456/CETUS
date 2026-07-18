@@ -2,9 +2,10 @@ import { Navigate, useParams } from 'react-router-dom'
 import { EDGE_STATIONS, isEdgeStationId } from '@/config/edgeStations'
 import { FLEET_BY_ID, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
+import { deriveVesselTelemetry } from '@/lib/telemetry'
 import { Badge, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
-import type { USVId } from '@/types/usv'
+import type { FleetUnit, USVId } from '@/types/usv'
 
 export default function EdgeStation() {
   const { stationId } = useParams()
@@ -33,7 +34,7 @@ function EdgeStationView({ stationId }: { stationId: '1' | '2' }) {
             {station.label} · 领航艇 {f.leader.replace('USV-', '')}
           </h2>
           <p className="mt-1 text-[13px] text-ink-soft">
-            分管 {f.members.join('、')} · 近实时位置 / 姿态 / 健康 · 无长周期历史图
+            分管 {f.members.join('、')} · 运行 / 通信 / 健康状态近实时汇聚 · 无长周期历史图
           </p>
         </div>
         <div className="text-right">
@@ -50,11 +51,16 @@ function EdgeStationView({ stationId }: { stationId: '1' | '2' }) {
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <section className="panel flex flex-col rounded-lg p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-display text-[15px] font-600">局部编队态势</h3>
+            <h3 className="font-display text-[15px] font-600">局部编队态势 · 水面俯视</h3>
             <Badge tone="water">近实时</Badge>
           </div>
           <div className="blueprint-bg flex flex-1 items-center justify-center rounded-md ring-1 ring-line-soft/70">
-            <TriangleSVG members={f.members as USVId[]} leader={f.leader} edges={f.edges} sid={stationId} />
+            <FormationWaterView
+              members={f.members as USVId[]}
+              leader={f.leader}
+              edges={f.edges}
+              sid={stationId}
+            />
           </div>
         </section>
 
@@ -70,9 +76,11 @@ function EdgeStationView({ stationId }: { stationId: '1' | '2' }) {
 
 function MemberCard({ id }: { id: USVId }) {
   const unit = useFleetStore((s) => s.frame[id])
+  const updatedAt = useFleetStore((s) => s.updatedAt)
   const cfg = FLEET_BY_ID[id]
   const tone = unit.isFault ? 'alert' : unit.health >= 90 ? 'ok' : 'warn'
   const hdgDeg = ((unit.heading * 180) / Math.PI + 360) % 360
+  const tele = deriveVesselTelemetry(unit, updatedAt)
 
   return (
     <div
@@ -97,17 +105,52 @@ function MemberCard({ id }: { id: USVId }) {
         </span>
       </div>
       <Progress value={unit.health} tone={tone} className="mt-2" />
-      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
-        <span>北 X {unit.x.toFixed(2)}</span>
-        <span>东 Y {unit.y.toFixed(2)}</span>
-        <span>航向 {hdgDeg.toFixed(1)}°</span>
-        <span>航速 {unit.speed.toFixed(2)}</span>
+
+      <div className="mt-2.5 space-y-2">
+        <div>
+          <div className="label-eyebrow mb-1">运行状态</div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
+            <span>北 X {unit.x.toFixed(2)}</span>
+            <span>东 Y {unit.y.toFixed(2)}</span>
+            <span>航向 {hdgDeg.toFixed(1)}°</span>
+            <span>航速 {unit.speed.toFixed(2)} kn</span>
+          </div>
+          <div className="mt-1.5 flex items-center gap-2">
+            <span className="font-mono text-[10.5px] text-ink-faint">任务进度</span>
+            <Progress value={tele.taskProgressPct} tone="water" className="flex-1" />
+            <span className="font-mono text-[10.5px] text-ink-soft">
+              {tele.taskProgressPct.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div className="label-eyebrow mb-1">通信状态</div>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
+            <span>时延 {tele.latencyMs.toFixed(1)} ms</span>
+            <span>丢包 {tele.packetLossPct.toFixed(2)}%</span>
+            <span>信号 {tele.signalDbm.toFixed(0)} dBm</span>
+          </div>
+        </div>
+
+        <div>
+          <div className="label-eyebrow mb-1">健康状态</div>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
+            <span>异常 {tele.anomaly}</span>
+            <span className={cn(unit.isFault && 'text-accent')}>故障 {tele.faultState}</span>
+            <span>评估 {tele.healthEval.toFixed(1)}%</span>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function TriangleSVG({
+/**
+ * 水面俯视态势：以三艇实时位置自动缩放映射到视口
+ * （screen x = 东，screen y = 北向上；艇形按 heading 旋转）。
+ */
+function FormationWaterView({
   members,
   leader,
   edges,
@@ -118,43 +161,74 @@ function TriangleSVG({
   edges: readonly { from: USVId; to: USVId; dir: 'uni' | 'bi' }[]
   sid: string
 }) {
-  const W = 360
-  const H = 320
-  const apex = { x: 180, y: 56 }
-  const bl = { x: 66, y: 252 }
-  const br = { x: 294, y: 252 }
-  const pos: Record<string, { x: number; y: number }> = {}
-  pos[leader] = apex
-  const others = members.filter((m) => m !== leader)
-  pos[others[0]] = bl
-  pos[others[1]] = br
-  const radiusOf = (id: USVId) => (id === leader ? 38 : 32)
+  const frame = useFleetStore((s) => s.frame)
+  const W = 420
+  const H = 340
+  const MARGIN = 52
+
+  const world = members.map((id) => ({ id, n: frame[id].x, e: frame[id].y }))
+  const nMin = Math.min(...world.map((p) => p.n))
+  const nMax = Math.max(...world.map((p) => p.n))
+  const eMin = Math.min(...world.map((p) => p.e))
+  const eMax = Math.max(...world.map((p) => p.e))
+  const spanN = Math.max(nMax - nMin, 14)
+  const spanE = Math.max(eMax - eMin, 14)
+  const scale = Math.min((W - 2 * MARGIN) / spanE, (H - 2 * MARGIN) / spanN)
+  const nMid = (nMin + nMax) / 2
+  const eMid = (eMin + eMax) / 2
+
+  const sx = (e: number) => W / 2 + (e - eMid) * scale
+  const sy = (n: number) => H / 2 - (n - nMid) * scale
+  const pos = Object.fromEntries(world.map((p) => [p.id, { x: sx(p.e), y: sy(p.n) }])) as Record<
+    USVId,
+    { x: number; y: number }
+  >
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-full max-h-[360px] w-full" preserveAspectRatio="xMidYMid meet">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="h-full max-h-[380px] w-full"
+      preserveAspectRatio="xMidYMid meet"
+    >
       <defs>
-        <marker id={`ae-${sid}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <marker id={`we-${sid}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M0,0 L10,5 L0,10 z" fill="var(--color-water)" />
         </marker>
-        <marker id={`as-${sid}`} viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <marker id={`ws-${sid}`} viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M10,0 L0,5 L10,10 z" fill="var(--color-water)" />
         </marker>
-        <radialGradient id={`tf-${sid}`} cx="50%" cy="40%" r="70%">
-          <stop offset="0%" stopColor="rgba(74,130,184,0.10)" />
-          <stop offset="100%" stopColor="rgba(74,130,184,0.02)" />
-        </radialGradient>
+        <linearGradient id={`wg-${sid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(61,109,155,0.14)" />
+          <stop offset="55%" stopColor="rgba(74,130,184,0.07)" />
+          <stop offset="100%" stopColor="rgba(26,64,110,0.13)" />
+        </linearGradient>
       </defs>
-      <polygon
-        points={`${apex.x},${apex.y} ${bl.x},${bl.y} ${br.x},${br.y}`}
-        fill={`url(#tf-${sid})`}
-        stroke="rgba(127,168,204,0.45)"
-        strokeWidth="1.2"
-        strokeDasharray="2 6"
-      />
+
+      <rect x={0} y={0} width={W} height={H} fill={`url(#wg-${sid})`} rx={6} />
+      {[0.22, 0.4, 0.58, 0.76].map((k, i) => (
+        <path
+          key={i}
+          d={`M -10 ${H * k} Q ${W * 0.25} ${H * k - 9} ${W * 0.5} ${H * k} T ${W + 10} ${H * k}`}
+          fill="none"
+          stroke="rgba(127,168,204,0.28)"
+          strokeWidth="1"
+        />
+      ))}
+
+      {/* 指北针 */}
+      <g transform={`translate(${W - 30} 30)`}>
+        <circle r={11} fill="rgba(255,255,255,0.5)" stroke="rgba(127,168,204,0.5)" strokeWidth="1" />
+        <path d="M 0 6 L 0 -7" stroke="var(--color-primary)" strokeWidth="1.6" markerEnd={`url(#we-${sid})`} />
+        <text y={24} textAnchor="middle" fontSize="9.5" fontWeight="700" fill="var(--color-primary)">
+          N
+        </text>
+      </g>
+
+      {/* Mesh 链路 */}
       {edges.map(({ from, to, dir }) => {
         const a = pos[from]
         const b = pos[to]
-        const { ax, ay, bx, by } = shorten(a, b, radiusOf(from), radiusOf(to) + 6)
+        const { ax, ay, bx, by } = shorten(a, b, 20, 26)
         const bi = dir === 'bi'
         return (
           <path
@@ -163,69 +237,82 @@ function TriangleSVG({
             fill="none"
             stroke="var(--color-water)"
             strokeWidth="1.6"
-            markerStart={bi ? `url(#as-${sid})` : undefined}
-            markerEnd={`url(#ae-${sid})`}
+            strokeDasharray={bi ? undefined : '5 4'}
+            markerStart={bi ? `url(#ws-${sid})` : undefined}
+            markerEnd={`url(#we-${sid})`}
             className="flow-edge"
           />
         )
       })}
+
+      {/* 艇形 */}
       {members.map((id) => (
-        <FormationNode
-          key={id}
-          id={id}
-          x={pos[id].x}
-          y={pos[id].y}
-          r={radiusOf(id)}
-          fillId={`tf-${sid}`}
-        />
+        <BoatNode key={id} id={id} leader={leader} x={pos[id].x} y={pos[id].y} unit={frame[id]} />
       ))}
     </svg>
   )
 }
 
-function FormationNode({
+/** 艇形多边形朝 +x 绘制；heading 0 = 朝北（屏幕向上），故旋转 heading - 90° */
+const BOAT_POINTS = '17,0 6,-5.5 -9,-5.5 -13,0 -9,5.5 6,5.5'
+
+function BoatNode({
   id,
+  leader,
   x,
   y,
-  r,
-  fillId,
+  unit,
 }: {
   id: USVId
+  leader: USVId
   x: number
   y: number
-  r: number
-  fillId: string
+  unit: FleetUnit
 }) {
-  const unit = useFleetStore((s) => s.frame[id])
   const role = FLEET_BY_ID[id].role
-  const tone = unit.isFault ? '#ff7a6b' : unit.health >= 90 ? '#2dc993' : '#f5b335'
+  const isLeader = id === leader
+  const rot = (unit.heading * 180) / Math.PI - 90
+  const stroke = unit.isFault ? '#ff7a6b' : isLeader ? '#1a406e' : '#3d6d9b'
+  const fill = unit.isFault
+    ? 'rgba(255,122,107,0.28)'
+    : role === 'virtual'
+      ? 'rgba(127,168,204,0.16)'
+      : isLeader
+        ? 'rgba(42,90,136,0.55)'
+        : 'rgba(74,130,184,0.42)'
   return (
     <g>
-      {role === 'virtual' && (
-        <circle
-          cx={x}
-          cy={y}
-          r={r + 9}
-          fill="none"
-          stroke="var(--color-water)"
-          strokeWidth="1.2"
-          strokeDasharray="3 4"
+      <g transform={`translate(${x} ${y}) rotate(${rot.toFixed(1)})`}>
+        <polygon
+          points={BOAT_POINTS}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth="1.6"
+          strokeDasharray={role === 'virtual' ? '3 2.5' : undefined}
+          strokeLinejoin="round"
         />
-      )}
-      <circle cx={x} cy={y} r={r} fill={`url(#${fillId})`} stroke="var(--color-primary)" strokeWidth="1.8" />
+        <line x1={6} y1={0} x2={15} y2={0} stroke={stroke} strokeWidth="1" opacity="0.7" />
+      </g>
       <text
         x={x}
-        y={y + 1}
+        y={y - 16}
         textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="17"
+        fontSize="12"
         fontWeight="700"
+        fontFamily="var(--font-mono, monospace)"
         fill="var(--color-ink)"
       >
         {id.replace('USV-', '')}
       </text>
-      <text x={x} y={y + r + 14} textAnchor="middle" fontSize="10" fill={tone}>
-        {unit.isFault ? 'FAULT' : `${unit.health.toFixed(0)}%`}
+      <text
+        x={x}
+        y={y + 22}
+        textAnchor="middle"
+        fontSize="9.5"
+        fill={unit.isFault ? '#ff7a6b' : 'var(--color-ink-faint)'}
+      >
+        {roleLabel(role)}
+        {unit.isFault ? ' · FAULT' : ''}
       </text>
     </g>
   )

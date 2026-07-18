@@ -4,7 +4,8 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
 import { Crosshair, Move, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
-import { SCENE_CENTER, toSceneForward, toScenePosition } from '@/lib/coords'
+import { toSceneForward, toScenePosition } from '@/lib/coords'
+import { frameAt } from '@/lib/fleetReplay'
 import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
 import type { USVId } from '@/types/usv'
@@ -83,7 +84,17 @@ export function CloudScene() {
     host.appendChild(labelRenderer.domElement)
 
     const scene = new THREE.Scene()
-    const cam = SCENE_CENTER
+    // 自由视角（斜视/俯视）锚点：初始时刻的集群中心，不跟随移动中的集群
+    const cam = (() => {
+      const f = frameAt(0)
+      const c = new THREE.Vector3()
+      for (const u of FLEET) {
+        const p = toScenePosition({ x: f[u.id].x, y: f[u.id].y, z: 0 }, 0)
+        c.x += p.x
+        c.z += p.z
+      }
+      return c.multiplyScalar(1 / FLEET.length)
+    })()
     const startPose = fleetCameraPose('overview', cam)
 
     const camera = new THREE.PerspectiveCamera(44, host.clientWidth / host.clientHeight, 0.1, 4000)
@@ -115,7 +126,6 @@ export function CloudScene() {
       target: startPose.target.clone(),
       active: false,
     }
-    const fleetCenter = new THREE.Vector3()
     const centerDelta = new THREE.Vector3()
     const freeViewOffset = new THREE.Vector3()
     const desiredTarget = new THREE.Vector3()
@@ -128,7 +138,7 @@ export function CloudScene() {
     }
     const capturePanOffset = () => {
       if (isInteracting && isPanEnabled && camState.kind === 'free') {
-        freeViewOffset.copy(controls.target).sub(fleetCenter)
+        freeViewOffset.copy(controls.target).sub(cam)
       }
     }
     const finishInteraction = () => {
@@ -176,8 +186,6 @@ export function CloudScene() {
       const dt = Math.min(clock.getDelta(), 0.05)
       t += dt
       const frame = useFleetStore.getState().frame
-      fleetCenter.set(0, 0, 0)
-      let positionedBoats = 0
       if (water) water.material.uniforms['time'].value += dt * 0.5
 
       for (const b of boats) {
@@ -189,9 +197,6 @@ export function CloudScene() {
         )
         const fwd = toSceneForward(Math.cos(unit.heading), Math.sin(unit.heading))
         b.group.position.set(pos.x, pos.y, pos.z)
-        fleetCenter.x += pos.x
-        fleetCenter.z += pos.z
-        positionedBoats += 1
         b.group.rotation.y = headingToYRot(fwd.fx, fwd.fz)
         b.sceneFx = fwd.fx
         b.sceneFz = fwd.fz
@@ -208,8 +213,6 @@ export function CloudScene() {
         b.wake.update(state, dt, t)
       }
 
-      if (positionedBoats > 0) fleetCenter.multiplyScalar(1 / positionedBoats)
-
       if (camState.kind === 'track') {
         const trackId = camState.id
         const boat = boats.find((b) => b.id === trackId)
@@ -220,9 +223,9 @@ export function CloudScene() {
           camera.position.lerp(pose.position, a)
           controls.target.lerp(pose.target, a)
         }
-      } else if (positionedBoats > 0) {
+      } else {
         if (camGoal.active) {
-          const pose = fleetCameraPose(camState.mode, fleetCenter)
+          const pose = fleetCameraPose(camState.mode, cam)
           camGoal.pos.copy(pose.position)
           camGoal.target.copy(pose.target)
           const a = 1 - Math.exp(-VIEW_LERP_SPEED * dt)
@@ -237,7 +240,7 @@ export function CloudScene() {
             camGoal.active = false
           }
         } else {
-          desiredTarget.copy(fleetCenter).add(freeViewOffset)
+          desiredTarget.copy(cam).add(freeViewOffset)
           centerDelta.copy(desiredTarget).sub(controls.target)
           camera.position.add(centerDelta)
           controls.target.copy(desiredTarget)

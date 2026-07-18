@@ -8,6 +8,12 @@ const SOURCE_TIMEOUT_MS = 2_000
 const RECONNECT_BASE_MS = 500
 const RECONNECT_MAX_MS = 5_000
 
+/**
+ * 演示模式开关：false = 停用 WebSocket 接入，全量使用内置自定义演示轨迹。
+ * 接入代码完整保留，置回 true 即恢复真实链路。
+ */
+export const ENABLE_LIVE_WS = false
+
 /** 在 Layout 生命周期内唯一挂载的舰队数据运行时（浏览器与 Tauri 同源 WebSocket）。 */
 export function useFleetRuntime() {
   const shouldPlayMock = useFleetStore((state) => !state.hasReceivedLive)
@@ -17,6 +23,17 @@ export function useFleetRuntime() {
   useMockFleet(shouldPlayMock)
 
   useEffect(() => {
+    if (!ENABLE_LIVE_WS) {
+      useFleetStore.getState().updateReceiver({
+        state: 'idle',
+        bindAddress: 'demo://trajectory',
+        sender: null,
+        lastPacketAtMs: null,
+        droppedPackets: 0,
+      })
+      return
+    }
+
     let disposed = false
     let socket: WebSocket | undefined
     let reconnectTimer: number | undefined

@@ -1,4 +1,4 @@
-/** CSV 轨迹回放到舰队状态的组装边界。 */
+/** 演示轨迹到舰队状态的组装边界。 */
 import { FLEET } from '@/config/fleet'
 import { sampleTrajectory } from '@/lib/trajectory'
 import type { FleetFrame, USVId } from '@/types/usv'
@@ -17,8 +17,7 @@ export interface BoatKinematics {
 }
 
 /**
- * 从导入的 CSV 轨迹计算 t 时刻的编队运动学（对方水平面：X 北 / Y 东）。
- * CSV 没有时间列，按配置的回放步长采样；点间线性插值，抵达末点后停止。
+ * 由内置演示轨迹（确定性时间函数）计算 t 时刻的编队运动学（水平面：X 北 / Y 东）。
  */
 export function trajectoryAt(t: number): Record<USVId, BoatKinematics> {
   const out = {} as Record<USVId, BoatKinematics>

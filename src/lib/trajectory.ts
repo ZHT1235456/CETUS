@@ -1,107 +1,127 @@
-import trajectoryUSV2 from '../../assets/trajecytory/trajectory1对应USV2.csv?raw'
-import trajectoryUSV3 from '../../assets/trajecytory/trajectory2对应USV3.csv?raw'
-import trajectoryVirtual1 from '../../assets/trajecytory/trajectory3对应虚拟节点1.csv?raw'
-import trajectoryVirtual6 from '../../assets/trajecytory/trajectory4对应虚拟节点6.csv?raw'
-import trajectoryUSV4 from '../../assets/trajecytory/trajectory5对应USV4.csv?raw'
-import trajectoryUSV5 from '../../assets/trajecytory/trajectory6对应USV5.csv?raw'
 import type { USVId } from '@/types/usv'
 
-const configuredSampleInterval = Number(
-  import.meta.env.VITE_TRAJECTORY_SAMPLE_INTERVAL_SECONDS ?? 0.1,
-)
+/**
+ * 内置演示轨迹（确定性时间函数，取代原 CSV 回放）。
+ *
+ * 六艇编队感设计：
+ *   - USV-2 / USV-3 为两队领航艇，沿同一闭合椭圆反相位环绕（周期 150s）；
+ *   - USV-5 / USV-4 分别为其跟随艇，在领航艇体坐标系内保持「后-侧」偏移，
+ *     偏移量随时间缓慢呼吸，呈现三角队形 ↔ 梯队变换；
+ *   - USV-1 / USV-6（虚艇）以更大偏移伴随，整体构成长循环编队。
+ *
+ * 坐标约定与 WS 一致：x = 北，y = 东；heading 0 = 朝 +x 北。
+ */
 
-if (!Number.isFinite(configuredSampleInterval) || configuredSampleInterval <= 0) {
-  throw new Error('VITE_TRAJECTORY_SAMPLE_INTERVAL_SECONDS 必须是大于 0 的有限数值')
-}
+export const TRAJECTORY_LOOP_SECONDS = 150
 
-/** CSV 无时间列；默认按 0.1 秒/点回放，可由同名 Vite 环境变量覆盖。 */
-export const TRAJECTORY_SAMPLE_INTERVAL_SECONDS = configuredSampleInterval
+const TAU = Math.PI * 2
+/** 作业区中心（对齐 coords.ts THEIR_CENTER：北 380 / 东 -470） */
+const CENTER = { x: 380, y: -470 }
+const LOOP_RX = 38
+const LOOP_RY = 24
 
-export interface TrajectoryPoint {
-  x: number
-  y: number
-}
+type OffsetSpec = { base: number; amp: number; period: number; phase: number }
 
-const RAW_TRAJECTORIES: Record<USVId, string> = {
-  'USV-1': trajectoryVirtual1,
-  'USV-2': trajectoryUSV2,
-  'USV-3': trajectoryUSV3,
-  'USV-4': trajectoryUSV4,
-  'USV-5': trajectoryUSV5,
-  'USV-6': trajectoryVirtual6,
-}
-
-function parseTrajectory(id: USVId, csv: string): readonly TrajectoryPoint[] {
-  const lines = csv.trim().split(/\r?\n/)
-  if (lines.shift()?.trim().toLowerCase() !== 'x,y') {
-    throw new Error(`${id} 轨迹缺少 x,y 表头`)
-  }
-
-  const points = lines.map((line, index) => {
-    const [xRaw, yRaw, ...extra] = line.split(',')
-    if (xRaw?.trim() === '' || yRaw?.trim() === '') {
-      throw new Error(`${id} 轨迹第 ${index + 2} 行坐标不能为空`)
+type BoatSpec =
+  | { kind: 'leader'; phase: number }
+  | {
+      kind: 'follower'
+      leader: 'USV-2' | 'USV-3'
+      back: OffsetSpec
+      side: OffsetSpec
+      sideSign: 1 | -1
     }
-    const x = Number(xRaw)
-    const y = Number(yRaw)
-    if (extra.length > 0 || !Number.isFinite(x) || !Number.isFinite(y)) {
-      throw new Error(`${id} 轨迹第 ${index + 2} 行格式无效`)
-    }
-    return { x, y }
-  })
 
-  if (points.length < 2) throw new Error(`${id} 轨迹至少需要两个点`)
-  return points
+const SPECS: Record<USVId, BoatSpec> = {
+  'USV-2': { kind: 'leader', phase: 0 },
+  'USV-3': { kind: 'leader', phase: Math.PI },
+  'USV-5': {
+    kind: 'follower',
+    leader: 'USV-2',
+    back: { base: 10, amp: 3.5, period: 80, phase: 0 },
+    side: { base: 6.5, amp: 3.5, period: 65, phase: 1.1 },
+    sideSign: 1,
+  },
+  'USV-1': {
+    kind: 'follower',
+    leader: 'USV-2',
+    back: { base: 17, amp: 4, period: 95, phase: 0.7 },
+    side: { base: 11, amp: 4, period: 70, phase: 2.2 },
+    sideSign: -1,
+  },
+  'USV-4': {
+    kind: 'follower',
+    leader: 'USV-3',
+    back: { base: 10, amp: 3.5, period: 80, phase: 0.5 },
+    side: { base: 6.5, amp: 3.5, period: 65, phase: 1.6 },
+    sideSign: -1,
+  },
+  'USV-6': {
+    kind: 'follower',
+    leader: 'USV-3',
+    back: { base: 17, amp: 4, period: 95, phase: 1.9 },
+    side: { base: 11, amp: 4, period: 70, phase: 0.4 },
+    sideSign: 1,
+  },
 }
 
-export const TRAJECTORIES = Object.fromEntries(
-  Object.entries(RAW_TRAJECTORIES).map(([id, csv]) => [id, parseTrajectory(id as USVId, csv)]),
-) as Record<USVId, readonly TrajectoryPoint[]>
-
-function directionAt(points: readonly TrajectoryPoint[], index: number) {
-  const origin = points[index]
-
-  for (let i = index + 1; i < points.length; i += 1) {
-    const dx = points[i].x - origin.x
-    const dy = points[i].y - origin.y
-    const length = Math.hypot(dx, dy)
-    if (length > 0) return { fx: dx / length, fy: dy / length }
-  }
-
-  for (let i = index - 1; i >= 0; i -= 1) {
-    const dx = origin.x - points[i].x
-    const dy = origin.y - points[i].y
-    const length = Math.hypot(dx, dy)
-    if (length > 0) return { fx: dx / length, fy: dy / length }
-  }
-
-  return { fx: 1, fy: 0 }
+function leaderPhase(leader: 'USV-2' | 'USV-3') {
+  return leader === 'USV-2' ? 0 : Math.PI
 }
 
-export function sampleTrajectory(id: USVId, elapsedSeconds: number) {
-  if (!Number.isFinite(elapsedSeconds)) {
-    throw new Error(`${id} 轨迹采样时间必须是有限数值`)
-  }
-  const points = TRAJECTORIES[id]
-  const samplePosition = Math.max(0, elapsedSeconds) / TRAJECTORY_SAMPLE_INTERVAL_SECONDS
-  const fromIndex = Math.min(Math.floor(samplePosition), points.length - 1)
-  const toIndex = Math.min(fromIndex + 1, points.length - 1)
-  const alpha = Math.min(samplePosition - fromIndex, 1)
-  const from = points[fromIndex]
-  const to = points[toIndex]
-  const dx = to.x - from.x
-  const dy = to.y - from.y
-  const distance = Math.hypot(dx, dy)
-  const direction = distance > 0
-    ? { fx: dx / distance, fy: dy / distance }
-    : directionAt(points, fromIndex)
-
+function leaderPos(phase: number, t: number) {
+  const th = (TAU * t) / TRAJECTORY_LOOP_SECONDS + phase
   return {
-    x: from.x + dx * alpha,
-    y: from.y + dy * alpha,
-    fx: direction.fx,
-    fy: direction.fy,
-    heading: Math.atan2(direction.fy, direction.fx),
-    speed: toIndex === fromIndex ? 0 : distance / TRAJECTORY_SAMPLE_INTERVAL_SECONDS,
+    x: CENTER.x + LOOP_RX * Math.cos(th),
+    y: CENTER.y + LOOP_RY * Math.sin(th),
+  }
+}
+
+function offsetAt(spec: OffsetSpec, t: number) {
+  return spec.base + spec.amp * Math.sin((TAU * t) / spec.period + spec.phase)
+}
+
+/** t 时刻某艇位置（x 北 / y 东） */
+export function demoPositionAt(id: USVId, t: number) {
+  const spec = SPECS[id]
+  if (spec.kind === 'leader') return leaderPos(spec.phase, t)
+  const phase = leaderPhase(spec.leader)
+  const lp = leaderPos(phase, t)
+  const ahead = leaderPos(phase, t + 0.3)
+  let fx = ahead.x - lp.x
+  let fy = ahead.y - lp.y
+  const len = Math.hypot(fx, fy) || 1
+  fx /= len
+  fy /= len
+  const back = offsetAt(spec.back, t)
+  const side = spec.sideSign * offsetAt(spec.side, t)
+  // 左法向 (-fy, fx)：pos = lp - fwd·back + left·side
+  return {
+    x: lp.x - fx * back - fy * side,
+    y: lp.y - fy * back + fx * side,
+  }
+}
+
+/**
+ * 采样某艇在 t 时刻的运动学状态。
+ * 朝向/速度由中心差分获得（轨迹为光滑三角函数，差分足够精确）。
+ */
+export function sampleTrajectory(id: USVId, elapsedSeconds: number) {
+  const t = Math.max(0, elapsedSeconds)
+  const e = 0.08
+  const before = demoPositionAt(id, t - e)
+  const after = demoPositionAt(id, t + e)
+  const vx = (after.x - before.x) / (2 * e)
+  const vy = (after.y - before.y) / (2 * e)
+  const speed = Math.hypot(vx, vy)
+  const heading = Math.atan2(vy, vx)
+  const p = demoPositionAt(id, t)
+  return {
+    x: p.x,
+    y: p.y,
+    fx: Math.cos(heading),
+    fy: Math.sin(heading),
+    heading,
+    speed,
   }
 }

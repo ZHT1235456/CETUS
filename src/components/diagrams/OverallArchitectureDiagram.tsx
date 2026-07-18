@@ -126,9 +126,9 @@ export function OverallArchitectureDiagram({ className }: Props) {
       ))}
 
       {/* 云侧层内：数据收集 → 集群决策 / 状态检测 → 全生命周期 */}
-      <path d="M316 93 L296 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
-      <path d="M488 93 L510 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
-      <path d="M682 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
+      <path d="M316 93 L296 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M488 93 L510 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M682 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 数据中心（船形图标） */}
       <ShipIcon x={404} y={150} />
@@ -142,6 +142,7 @@ export function OverallArchitectureDiagram({ className }: Props) {
         stroke={DIAG.lineGray}
         strokeWidth={1.8}
         markerEnd="url(#oa-gray)"
+        className="flow-edge"
       />
       {/* 全生命周期数据管理 → 数据中心（向下归档） */}
       <path
@@ -150,6 +151,7 @@ export function OverallArchitectureDiagram({ className }: Props) {
         stroke={DIAG.lineGray}
         strokeWidth={1.8}
         markerEnd="url(#oa-gray)"
+        className="flow-edge"
       />
 
       {/* ── 云边协同 ──────────────────────────────────────────── */}
@@ -193,26 +195,26 @@ export function OverallArchitectureDiagram({ className }: Props) {
       ))}
 
       {/* 边侧层内：汇聚 → 任务管理 / 汇聚 → 局部规划 / 自治 → 局部规划 */}
-      <path d="M316 355 L296 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
-      <path d="M488 355 L510 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
-      <path d="M706 355 L684 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" />
+      <path d="M316 355 L296 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M488 355 L510 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M706 355 L684 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 实时数据库缓存 */}
       <Cylinder cx={500} top={414} w={300} h={40} ry={10} grad="oa-g-cyl-amber" line={DIAG.edgeLine} label="实时数据库缓存" />
-      <path d="M403 388 L403 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" />
-      <path d="M597 388 L597 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" />
+      <path d="M403 388 L403 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M597 388 L597 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" className="flow-edge" />
 
-      {/* 无人船排 + Mesh 互联 */}
+      {/* 无人艇排 + Mesh 互联 */}
       {[
-        { cx: 230, label: '无人船 1' },
-        { cx: 500, label: '无人船 2' },
-        { cx: 770, label: '无人船 N' },
+        { cx: 230, label: '无人艇 1' },
+        { cx: 500, label: '无人艇 2' },
+        { cx: 770, label: '无人艇 N' },
       ].map((b) => (
         <BoatChip key={b.label} cx={b.cx} top={498} label={b.label} onClick={() => navigate('/terminal/overview')} />
       ))}
-      <path d="M230 486 L430 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" />
-      <path d="M500 486 L500 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" />
-      <path d="M770 486 L570 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" />
+      <path d="M230 486 L430 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      <path d="M500 486 L500 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      <path d="M770 486 L570 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
       <text x={316} y={464} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={512} y={472} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={684} y={464} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
@@ -237,24 +239,44 @@ export function OverallArchitectureDiagram({ className }: Props) {
       {/* ══ 端侧 ═══════════════════════════════════════════════ */}
       <LayerFrame x={40} y={632} w={920} h={256} fill={DIAG.endFill} line={DIAG.endLine} title="端侧" en="TERMINAL TIER" />
 
-      {/* 无人船子框 */}
+      {/* 无人艇子框 */}
       <rect x={190} y={650} width={620} height={146} rx={12} fill="#ffffff70" stroke={DIAG.endLine} strokeWidth={1.5} />
       <text x={206} y={672} fill={DIAG.endLine} fontFamily={FONT_DISPLAY} fontSize={12} fontWeight={700}>
-        无人船
+        无人艇
       </text>
 
       {/* 全国产域控制器（圆柱） */}
-      <Cylinder cx={430} top={682} w={180} h={36} ry={9} grad="oa-g-cyl-green" line={DIAG.endLine} label="全国产域控制器" fontSize={12} />
+      <Cylinder cx={330} top={682} w={170} h={34} ry={9} grad="oa-g-cyl-green" line={DIAG.endLine} label="全国产域控制器" fontSize={12} />
 
-      {/* 决策与运行状态管理域（波浪底文档） */}
-      <DocShape x={610} y={680} w={160} h={42} grad="oa-g-end" line={DIAG.endLine} label="决策与运行状态管理域" fontSize={11.5} onClick={() => navigate('/terminal/overview')} />
-      <path d="M524 700 L606 700" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerStart="url(#oa-gray-bi)" markerEnd="url(#oa-gray)" />
+      {/* 以太网交换机（立方体） */}
+      <SwitchCube cx={505} cy={700} />
+      <text x={520} y={688} fill={DIAG.text} fontFamily={FONT_BODY} fontSize={9.5} fontWeight={600}>
+        以太网交换机
+      </text>
+
+      {/* 预测与健康状态管理域（虚线波浪底文档，挂交换机右侧） */}
+      <DocShape
+        x={640}
+        y={680}
+        w={150}
+        h={40}
+        grad="oa-g-end"
+        line={DIAG.endLine}
+        label="预测与健康状态管理域"
+        fontSize={11}
+        dashed
+        onClick={() => navigate('/terminal/overview')}
+      />
+
+      {/* 域控制器 → 交换机 → 预测与健康状态管理域 */}
+      <path d="M415 700 L490 700" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M520 700 L636 700" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 四域（波浪底文档） */}
       {[
         { x: 262, label: '感知域' },
         { x: 386, label: '运动控制域' },
-        { x: 510, label: '机能域' },
+        { x: 510, label: '机舱域' },
         { x: 634, label: '通信域' },
       ].map((d) => (
         <DocShape
@@ -266,23 +288,23 @@ export function OverallArchitectureDiagram({ className }: Props) {
           grad="oa-g-end"
           line={DIAG.endLine}
           label={d.label}
+          labelStrong
           onClick={() => navigate('/terminal/overview')}
         />
       ))}
-      {/* 四域 → 域控制器 */}
-      <path d="M314 738 L392 722" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M438 738 L426 722" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M562 738 L452 722" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M686 738 L478 722" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
+      {/* 交换机扇出 → 四域 */}
+      <path d="M505 713 L314 738" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M505 713 L438 738" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M505 713 L562 738" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M505 713 L686 738" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
 
-      {/* 左侧外部：相机数据 —USB→ 感知域 */}
+      {/* 左侧外部：相机数据 → 感知域 */}
       <DataBox x={64} y={742} w={96} h={40} label="相机数据" />
-      <path d="M164 762 L258 762" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerEnd="url(#oa-gray)" />
-      <text x={196} y={754} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={10}>USB</text>
+      <path d="M164 762 L258 762" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 右侧外部：通信数据 ↔HTTP↔ 通信域 */}
       <DataBox x={840} y={742} w={96} h={40} label="通信数据" />
-      <path d="M742 762 L836 762" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerStart="url(#oa-gray-bi)" markerEnd="url(#oa-gray)" />
+      <path d="M742 762 L836 762" fill="none" stroke={DIAG.lineGray} strokeWidth={1.7} markerStart="url(#oa-gray-bi)" markerEnd="url(#oa-gray)" className="flow-edge" />
       <text x={776} y={754} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={10}>HTTP</text>
 
       {/* 底部数据源一排 */}
@@ -296,25 +318,18 @@ export function OverallArchitectureDiagram({ className }: Props) {
       ].map((s) => (
         <DataBox key={s.label} x={s.x} y={822} w={128} h={34} label={s.label} fontSize={11.5} />
       ))}
-      {/* 传感器/机能数据汇入对应域（USB） */}
-      <path d="M160 820 L280 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M287 820 L316 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M420 820 L350 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M555 820 L548 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M690 820 L578 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      <path d="M840 820 L606 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" />
-      {[
-        { x: 178, label: 'USB' },
-        { x: 281, label: 'USB' },
-        { x: 387, label: 'USB' },
-        { x: 539, label: 'USB' },
-        { x: 646, label: 'USB' },
-        { x: 764, label: 'USB' },
-      ].map((t) => (
-        <text key={t.x} x={t.x} y={812} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={9.5}>
-          {t.label}
-        </text>
-      ))}
+      {/* 传感器/机舱数据汇入对应域 */}
+      <path d="M160 820 L280 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M287 820 L316 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M429 820 L438 790" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.5} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M555 820 L470 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M690 820 L578 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M840 820 L606 790" fill="none" stroke={DIAG.lineGray} strokeWidth={1.5} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <text x={178} y={812} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={9.5}>USB</text>
+      <text x={281} y={812} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={9.5}>USB</text>
+      <text x={450} y={812} fill={DIAG.flowBlue} fontFamily={FONT_MONO} fontSize={9.5}>HTTP</text>
+      <text x={520} y={812} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={9.5}>USB</text>
+      <text x={640} y={812} fill={DIAG.lineGray} fontFamily={FONT_MONO} fontSize={9.5}>USB</text>
 
       {/* ── 紧急接管：云侧直达端侧 ────────────────────────────── */}
       <path
@@ -324,11 +339,12 @@ export function OverallArchitectureDiagram({ className }: Props) {
         strokeWidth={2.2}
         strokeDasharray="7 5"
         markerEnd="url(#oa-em)"
+        className="flow-edge"
       />
       <text
-        x={981}
-        y={330}
-        transform="rotate(90 981 330)"
+        x={940}
+        y={348}
+        transform="rotate(90 940 348)"
         fill={DIAG.emergency}
         fontFamily={FONT_BODY}
         fontSize={11}
@@ -367,11 +383,12 @@ function LayerFrame({
         {title}
       </text>
       <text
-        x={x + 24 + title.length * 23 + 10}
-        y={y + 34}
+        x={x + w - 24}
+        y={y + 30}
+        textAnchor="end"
         fill={`${line}B3`}
         fontFamily={FONT_MONO}
-        fontSize={9}
+        fontSize={10}
         letterSpacing={2.5}
       >
         {en}
@@ -471,6 +488,36 @@ function Cylinder({
   )
 }
 
+/* ── 等轴测立方体（以太网交换机） ───────────────────────────── */
+function SwitchCube({ cx, cy }: { cx: number; cy: number }) {
+  const s = 11
+  const v = 15
+  const top = `${cx},${cy - 16} ${cx + s},${cy - 10} ${cx},${cy - 4} ${cx - s},${cy - 10}`
+  const left = `${cx - s},${cy - 10} ${cx},${cy - 4} ${cx},${cy - 4 + v} ${cx - s},${cy - 10 + v}`
+  const right = `${cx},${cy - 4} ${cx + s},${cy - 10} ${cx + s},${cy - 10 + v} ${cx},${cy - 4 + v}`
+  return (
+    <g stroke={DIAG.endLine} strokeWidth={1.5} strokeLinejoin="round">
+      <polygon points={left} fill="#D9E9D5" />
+      <polygon points={right} fill="#C3DEC0" />
+      <polygon points={top} fill="#F4FAF2" />
+      {/* 前面板网口 */}
+      {[0, 1, 2].map((i) => (
+        <rect
+          key={i}
+          x={cx - 6.4 + i * 4.6}
+          y={cy + 2.5}
+          width={3}
+          height={4.4}
+          rx={0.5}
+          fill={DIAG.endLine}
+          stroke="none"
+          opacity={0.7}
+        />
+      ))}
+    </g>
+  )
+}
+
 /* ── 波浪底文档形（域） ─────────────────────────────────────── */
 function docPath(x: number, y: number, w: number, h: number, amp = 7) {
   const yb = y + h - amp * 1.4
@@ -493,6 +540,8 @@ function DocShape({
   line,
   label,
   fontSize = 12.5,
+  dashed = false,
+  labelStrong = false,
   onClick,
 }: {
   x: number
@@ -503,19 +552,27 @@ function DocShape({
   line: string
   label: string
   fontSize?: number
+  dashed?: boolean
+  labelStrong?: boolean
   onClick?: () => void
 }) {
   return (
     <g onClick={onClick} className={onClick ? `cursor-pointer ${HOVER_LIFT}` : undefined}>
-      <path d={docPath(x, y, w, h)} fill={`url(#${grad})`} stroke={line} strokeWidth={1.8} />
+      <path
+        d={docPath(x, y, w, h)}
+        fill={`url(#${grad})`}
+        stroke={line}
+        strokeWidth={1.8}
+        strokeDasharray={dashed ? '5 4' : undefined}
+      />
       <text
         x={x + w / 2}
         y={y + (h - 6) / 2 + fontSize * 0.34}
         textAnchor="middle"
-        fill={DIAG.text}
+        fill={labelStrong ? line : DIAG.text}
         fontFamily={FONT_BODY}
         fontSize={fontSize}
-        fontWeight={600}
+        fontWeight={labelStrong ? 700 : 600}
       >
         {label}
       </text>
@@ -523,7 +580,7 @@ function DocShape({
   )
 }
 
-/* ── 无人船 ─────────────────────────────────────────────────── */
+/* ── 无人艇 ─────────────────────────────────────────────────── */
 function BoatChip({
   cx,
   top,

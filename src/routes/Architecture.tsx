@@ -5,31 +5,9 @@ import { Badge } from '@/components/ui'
 export default function Architecture() {
   return (
     <div className="flex h-full min-h-0 flex-col px-6 pt-5 pb-5">
-      <header className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="label-eyebrow">Fig.1 · Overall Architecture</div>
-          <h2 className="mt-1 font-display text-[22px] font-600 text-ink">云·边·端协同总体架构</h2>
-          <p className="mt-1.5 max-w-3xl text-[13.5px] leading-relaxed text-ink-soft">
-            云侧决策、边侧协调、端侧执行：常态沿云→边→端闭环运行；紧急时云侧经直达链路接管端侧。点击图中模块进入对应层级。
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge tone="water">全局 / 长周期 → 云侧</Badge>
-          <Badge tone="ghost">局部 / 近实时 → 边侧</Badge>
-          <Badge tone="ok">单艇 / 高频 → 端侧</Badge>
-        </div>
-      </header>
-
       <DiagramPanel
         eyebrow="CETUS · SYS-ARCH"
         title="系统总体架构图 · 云侧 / 边侧 / 端侧"
-        actions={
-          <>
-            <Badge tone="water">下行任务</Badge>
-            <Badge tone="ok">上行状态</Badge>
-            <Badge tone="alert">紧急直达</Badge>
-          </>
-        }
         contentClassName="p-5"
       >
         <OverallArchitectureDiagram className="mx-auto h-auto w-full max-w-[940px]" />
@@ -52,8 +30,8 @@ export default function Architecture() {
             tier="端侧"
             tone="ok"
             scope="单艇 · 本地 · 实时"
-            duty="感知、运动控制、机能、通信四域协同执行，决策与运行状态管理域统筹上报"
-            limit="决策评估不直接干预运动控制；失联策略不超出预配置权限"
+            duty="感知、运动控制、机舱、通信四域协同执行，预测与健康状态管理域统筹上报"
+            limit="健康评估不直接干预运动控制；失联策略不超出预配置权限"
           />
         </div>
       </DiagramPanel>

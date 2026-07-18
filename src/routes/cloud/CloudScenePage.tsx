@@ -1,16 +1,17 @@
 import { CloudScene } from '@/components/cloud/CloudScene'
 import { FaultGrid } from '@/components/cloud/FaultGrid'
 import { Badge, Dot } from '@/components/ui'
-import { TRAJECTORY_SAMPLE_INTERVAL_SECONDS } from '@/lib/trajectory'
+import { ENABLE_LIVE_WS } from '@/hooks/useFleetRuntime'
 import { useFleetStore } from '@/store/usvStore'
 
-/** 原云端主页 3D 场景 — 藏于「场景展示」子页 */
+/** 原云侧主页 3D 场景 — 藏于「场景展示」子页 */
 export default function CloudScenePage() {
   const source = useFleetStore((state) => state.source)
   const receiver = useFleetStore((state) => state.receiver)
 
-  const receiverView =
-    receiver.state === 'live'
+  const receiverView = !ENABLE_LIVE_WS
+    ? { tone: 'water' as const, text: 'DEMO — 自定义编队轨迹驱动' }
+    : receiver.state === 'live'
       ? { tone: 'ok' as const, text: `LIVE — ${receiver.bindAddress}` }
       : receiver.state === 'timedOut'
         ? { tone: 'warn' as const, text: 'TIMEOUT — 已冻结最后一帧，等待发送恢复' }
@@ -30,16 +31,14 @@ export default function CloudScenePage() {
             <div className="flex items-center gap-2">
               <Dot tone="ok" pulse />
               <span className="font-display text-[14px] font-600 text-ink">
-                {source === 'live' ? '六艇实时轨迹' : '六艇轨迹回放'}
+                {source === 'live' ? '六艇实时轨迹' : '六艇演示轨迹'}
               </span>
             </div>
             <span className="h-4 w-px bg-line" />
             {source === 'live' ? (
               <Badge tone="ok">WebSocket 完整帧</Badge>
             ) : (
-              <Badge tone="water">
-                CSV 回放 · {TRAJECTORY_SAMPLE_INTERVAL_SECONDS}s/点
-              </Badge>
+              <Badge tone="water">演示轨迹 · DEMO</Badge>
             )}
             <Badge tone="ghost">场景展示 · 按需打开</Badge>
           </div>
@@ -53,7 +52,9 @@ export default function CloudScenePage() {
 
         <div className="pointer-events-none absolute bottom-5 left-6 z-10 fade-in" style={{ animationDelay: '0.18s' }}>
           <div className="panel-flat flex items-center gap-3 rounded-lg px-4 py-2.5 shadow-1">
-            <span className="label-eyebrow">WS · {receiver.bindAddress}</span>
+            <span className="label-eyebrow">
+              {ENABLE_LIVE_WS ? `WS · ${receiver.bindAddress}` : 'TRAJ · DEMO'}
+            </span>
             <span className="h-4 w-px bg-line" />
             <span
               className={`flex items-center gap-1.5 font-mono text-[12px] ${
@@ -63,10 +64,12 @@ export default function CloudScenePage() {
                     ? 'text-accent'
                     : receiverView.tone === 'warn'
                       ? 'text-warn'
-                      : 'text-ink-faint'
+                      : receiverView.tone === 'water'
+                        ? 'text-water'
+                        : 'text-ink-faint'
               }`}
             >
-              <Dot tone={receiverView.tone} pulse={receiverView.tone === 'ok'} />
+              <Dot tone={receiverView.tone === 'water' ? 'water' : receiverView.tone} pulse={receiverView.tone === 'ok'} />
               {receiverView.text}
             </span>
           </div>

@@ -119,7 +119,7 @@ export function Sidebar() {
         <div className="space-y-2 rounded-md border border-line-soft/80 bg-surface/45 px-3 py-2.5 shadow-1">
           <Telemetry label="LOCAL TIME" value={clock} />
           <Telemetry label="FLEET LINK" value="ONLINE" dot />
-          <Telemetry label="WS TUNNEL" value="STANDBY" tone="warn" />
+          <Telemetry label="DATA SRC" value="DEMO" tone="warn" />
         </div>
         <div className="mt-3.5 flex items-center justify-between chip text-ink-ghost">
           <span>CETUS · v0.1.0</span>

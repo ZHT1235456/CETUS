@@ -27,7 +27,7 @@ const TITLES: { prefix: string; zh: string; en: string; sub: string }[] = [
     prefix: '/terminal',
     zh: '端',
     en: 'Terminal Tier',
-    sub: '端侧五域 · 感知 / 运动控制 / 机能 / 通信 · 决策与运行状态管理',
+    sub: '端侧五域 · 感知 / 运动控制 / 机舱 / 通信 · 预测与健康状态管理',
   },
 ]
 

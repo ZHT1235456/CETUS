@@ -6,7 +6,7 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
 
   return (
     <svg
-      viewBox="0 0 920 520"
+      viewBox="0 0 920 500"
       className={className}
       role="img"
       aria-label="云侧功能架构与数据流"
@@ -23,7 +23,7 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
         </marker>
       </defs>
 
-      <Endpoint x={20} y={210} label="边侧汇聚数据" />
+      <Endpoint x={8} y={210} w={108} label="边侧汇聚数据" />
 
       {/* 数据收集 */}
       <GroupFrame x={130} y={70} w={170} h={280} title="数据收集" />
@@ -52,23 +52,17 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
       <Endpoint x={760} y={220} label="紧急直达端侧" emergency />
 
       {/* flows */}
-      <path d="M110 235 L130 235" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ca-teal)" />
-      <path d="M300 145 L360 145" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" />
+      <path d="M116 235 L130 235" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ca-teal)" className="flow-edge" />
+      <path d="M300 145 L360 145" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" className="flow-edge" />
       <text x="305" y="135" fill={DIAG.text} fontSize="10">实时数据</text>
-      <path d="M510 145 L570 160" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" />
+      <path d="M510 145 L570 160" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" className="flow-edge" />
       <text x="505" y="130" fill={DIAG.text} fontSize="10">当前集群态势</text>
-      <path d="M720 150 L760 160" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" />
-      <path d="M720 240 L760 240" stroke={DIAG.emergency} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#ca-em)" />
-      <path d="M215 350 L215 400 L550 400" fill="none" stroke={DIAG.flowTeal} strokeWidth="1.8" markerEnd="url(#ca-teal)" />
+      <path d="M720 150 L760 160" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" className="flow-edge" />
+      <path d="M720 240 L760 240" stroke={DIAG.emergency} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#ca-em)" className="flow-edge" />
+      <path d="M215 350 L215 400 L550 400" fill="none" stroke={DIAG.flowTeal} strokeWidth="1.8" markerEnd="url(#ca-teal)" className="flow-edge" />
       <text x="280" y="392" fill={DIAG.text} fontSize="10">归档数据</text>
-      <path d="M550 445 L445 445 L445 370" fill="none" stroke={DIAG.lineGray} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#ca-blue)" />
+      <path d="M550 445 L445 445 L445 370" fill="none" stroke={DIAG.lineGray} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#ca-blue)" className="flow-edge" />
       <text x="460" y="465" fill={DIAG.text} fontSize="10">历史数据查询</text>
-
-      <g transform="translate(20, 500)">
-        <text fill={DIAG.lineGray} fontSize="11">
-          在线路径：收集 → 实时监测 → 决策 · 离线路径：归档 → 生命周期 → 历史回溯（不进入在线决策）
-        </text>
-      </g>
     </svg>
   )
 }
@@ -122,11 +116,13 @@ function Sub({
 function Endpoint({
   x,
   y,
+  w = 120,
   label,
   emergency,
 }: {
   x: number
   y: number
+  w?: number
   label: string
   emergency?: boolean
 }) {
@@ -135,14 +131,14 @@ function Endpoint({
       <rect
         x={x}
         y={y}
-        width={120}
+        width={w}
         height="48"
         rx="6"
         fill={DIAG.softGray}
         stroke={emergency ? DIAG.emergency : DIAG.lineGray}
         strokeWidth="1.6"
       />
-      <text x={x + 60} y={y + 26} textAnchor="middle" dominantBaseline="middle" fill={DIAG.text} fontSize="11" fontWeight="600">
+      <text x={x + w / 2} y={y + 26} textAnchor="middle" dominantBaseline="middle" fill={DIAG.text} fontSize="11" fontWeight="600">
         {label}
       </text>
     </g>

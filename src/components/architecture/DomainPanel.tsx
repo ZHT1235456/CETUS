@@ -56,7 +56,7 @@ const DOMAINS: Domain[] = [
   },
   {
     id: 'machinery',
-    zh: '机能域',
+    zh: '机舱域',
     en: 'Machinery',
     desc: '推进 · 电力 · 舵机 · 液压舱况采集',
     Icon: Cog,
@@ -69,9 +69,9 @@ const DOMAINS: Domain[] = [
   },
   {
     id: 'phm',
-    zh: '决策与运行状态管理域',
-    en: 'Decision & Ops',
-    desc: '运行状态统筹 · 故障代码归集 · 健康度估计',
+    zh: '预测与健康状态管理域',
+    en: 'PHM',
+    desc: '异常检测 · 故障状态监测 · 健康状态评估',
     Icon: Activity,
     metrics: [
       ['健康均值', '97.4%'],

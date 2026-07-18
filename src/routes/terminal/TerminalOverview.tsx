@@ -1,6 +1,5 @@
 import { TerminalArchitectureDiagram } from '@/components/diagrams/TerminalArchitectureDiagram'
 import { DiagramPanel } from '@/components/diagrams/DiagramPanel'
-import { Badge } from '@/components/ui'
 
 export default function TerminalOverview() {
   return (
@@ -8,7 +7,6 @@ export default function TerminalOverview() {
       <DiagramPanel
         eyebrow="TERMINAL TIER"
         title="全国产域控制器 · 五域协同"
-        actions={<Badge tone="ok">健康评估只上报 · 不直接控运动</Badge>}
       >
         <TerminalArchitectureDiagram className="mx-auto h-auto w-full max-w-5xl" />
       </DiagramPanel>

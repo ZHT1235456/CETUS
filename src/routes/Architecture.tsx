@@ -28,7 +28,7 @@ export default function Architecture() {
             tier="端侧"
             tone="ok"
             scope="单艇 · 本地 · 实时"
-            duty="感知、运动控制、机舱、通信四域协同执行，预测与健康状态管理域统筹上报"
+            duty="感知、运动控制、机舱、通信、预测与健康状态管理五域协同执行"
           />
         </div>
       </DiagramPanel>

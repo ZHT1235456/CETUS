@@ -47,7 +47,7 @@ export default function CloudDecision() {
         />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[58%_42%]">
+      <div className="grid items-stretch gap-4 lg:grid-cols-[58%_42%]">
         <GlobalTrackSketch />
 
         <section className="panel rounded-lg p-4">
@@ -153,12 +153,16 @@ function GlobalTrackSketch() {
   const sy = (y: number) => H - (((y - minY) / (maxY - minY || 1)) * (H - 40) + 20)
 
   return (
-    <section className="panel rounded-lg p-4">
+    <section className="panel flex h-full flex-col rounded-lg p-4">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="font-display text-[15px] font-600 text-ink">全局航迹 / 态势平面</h3>
         <Badge tone="water">实时</Badge>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="blueprint-bg h-auto w-full rounded-md ring-1 ring-line-soft">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="blueprint-bg min-h-[280px] w-full flex-1 rounded-md ring-1 ring-line-soft"
+      >
         {pts.map((p) => {
           const x = sx(p.x)
           const y = sy(p.y)

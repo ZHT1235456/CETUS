@@ -134,13 +134,15 @@ export function OverallArchitectureDiagram({ className }: Props) {
           a. 数据收集西边 → 水平向左 → 向上入集群决策南边
           b. 数据收集顶边 → 竖直向上 → 状态检测底边
           c. 状态检测 → 全生命周期
+          c2. 状态检测 → 集群决策（水平向左，态势供决策）
           d. 全生命周期南边 → 竖直向下 → 水平向左入数据中心东边
-          e. 数据收集右舷 → 水平向右 → 数据中心（船） */}
+          e. 数据收集右舷 → 水平向右 → 数据中心（船）；d/e 同高 y=193 对齐 */}
       <path d="M330 189 L209 189 L209 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M470 160 L470 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M585 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
-      <path d="M791 122 L791 198 L653 198" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
-      <path d="M500 189 L613 189" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M415 93 L296 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M791 122 L791 193 L652 193" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M500 193 L612 193" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 数据中心（船形图标，置于数据收集右侧） */}
       <ShipIcon x={606} y={162} />

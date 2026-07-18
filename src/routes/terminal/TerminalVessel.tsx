@@ -182,7 +182,7 @@ function VesselPanel({ id }: { id: USVId }) {
             </div>
           </GaugeCard>
 
-          <GaugeCard title="时延 · 丢包" domain="通信" className="col-span-2">
+          <GaugeCard title="时延 · 丢包" domain="通信" className="col-span-2 xl:col-span-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-baseline justify-between">

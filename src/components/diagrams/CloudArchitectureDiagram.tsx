@@ -68,8 +68,6 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
       <text x="280" y="392" fill={DIAG.text} fontSize="10">归档数据</text>
       <path d="M550 420 L445 420 L445 406" fill="none" stroke={DIAG.lineGray} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#ca-blue)" className="flow-edge" />
       <text x="460" y="438" fill={DIAG.text} fontSize="10">历史数据查询</text>
-      {/* 全生命周期数据管理 → 集群决策（沿两框间隙竖直向上） */}
-      <path d="M635 266 L635 228" fill="none" stroke={DIAG.flowBlue} strokeWidth="1.8" markerEnd="url(#ca-blue)" className="flow-edge" />
     </svg>
   )
 }

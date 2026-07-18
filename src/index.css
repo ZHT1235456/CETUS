@@ -238,6 +238,44 @@
   animation: dash-flow 9s linear infinite;
 }
 
+/* Blueprint canvas — 图表「绘图板」底纹 */
+.blueprint-bg {
+  background-color: rgba(255, 255, 255, 0.35);
+  background-image:
+    linear-gradient(rgba(26, 64, 110, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 64, 110, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: center top;
+}
+
+/* 卡片 hover 上浮 */
+.card-hover {
+  transition:
+    transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--color-line-strong);
+}
+
+/* 列表依次升起 */
+.stagger > * {
+  animation: rise 0.55s var(--ease-out) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger > *:nth-child(3) { animation-delay: 0.13s; }
+.stagger > *:nth-child(4) { animation-delay: 0.18s; }
+.stagger > *:nth-child(5) { animation-delay: 0.23s; }
+.stagger > *:nth-child(6) { animation-delay: 0.28s; }
+.stagger > *:nth-child(7) { animation-delay: 0.33s; }
+.stagger > *:nth-child(8) { animation-delay: 0.38s; }
+.stagger > *:nth-child(9) { animation-delay: 0.43s; }
+.stagger > *:nth-child(10) { animation-delay: 0.48s; }
+
 /* Soft scanline for command-console feel */
 .scan-sheen {
   position: relative;

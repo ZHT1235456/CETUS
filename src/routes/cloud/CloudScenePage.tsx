@@ -4,7 +4,8 @@ import { Badge, Dot } from '@/components/ui'
 import { TRAJECTORY_SAMPLE_INTERVAL_SECONDS } from '@/lib/trajectory'
 import { useFleetStore } from '@/store/usvStore'
 
-export default function Cloud() {
+/** 原云端主页 3D 场景 — 藏于「场景展示」子页 */
+export default function CloudScenePage() {
   const source = useFleetStore((state) => state.source)
   const receiver = useFleetStore((state) => state.receiver)
 
@@ -25,7 +26,7 @@ export default function Cloud() {
         <CloudScene />
 
         <div className="pointer-events-none absolute left-6 top-5 z-10 fade-in" style={{ animationDelay: '0.05s' }}>
-          <div className="panel-flat flex flex-wrap items-center gap-3 rounded-md px-4 py-2.5 shadow-1">
+          <div className="panel-flat flex flex-wrap items-center gap-3 rounded-lg px-4 py-2.5 shadow-1">
             <div className="flex items-center gap-2">
               <Dot tone="ok" pulse />
               <span className="font-display text-[14px] font-600 text-ink">
@@ -40,7 +41,7 @@ export default function Cloud() {
                 CSV 回放 · {TRAJECTORY_SAMPLE_INTERVAL_SECONDS}s/点
               </Badge>
             )}
-            <Badge tone="ghost">4× 实艇 · 2× 虚艇</Badge>
+            <Badge tone="ghost">场景展示 · 按需打开</Badge>
           </div>
         </div>
 
@@ -51,18 +52,20 @@ export default function Cloud() {
         </div>
 
         <div className="pointer-events-none absolute bottom-5 left-6 z-10 fade-in" style={{ animationDelay: '0.18s' }}>
-          <div className="panel-flat flex items-center gap-3 rounded-md px-4 py-2.5 shadow-1">
+          <div className="panel-flat flex items-center gap-3 rounded-lg px-4 py-2.5 shadow-1">
             <span className="label-eyebrow">WS · {receiver.bindAddress}</span>
             <span className="h-4 w-px bg-line" />
-            <span className={`flex items-center gap-1.5 font-mono text-[12px] ${
-              receiverView.tone === 'ok'
-                ? 'text-ok'
-                : receiverView.tone === 'alert'
-                  ? 'text-accent'
-                  : receiverView.tone === 'warn'
-                    ? 'text-warn'
-                    : 'text-ink-faint'
-            }`}>
+            <span
+              className={`flex items-center gap-1.5 font-mono text-[12px] ${
+                receiverView.tone === 'ok'
+                  ? 'text-ok'
+                  : receiverView.tone === 'alert'
+                    ? 'text-accent'
+                    : receiverView.tone === 'warn'
+                      ? 'text-warn'
+                      : 'text-ink-faint'
+              }`}
+            >
               <Dot tone={receiverView.tone} pulse={receiverView.tone === 'ok'} />
               {receiverView.text}
             </span>

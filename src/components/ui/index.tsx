@@ -26,7 +26,7 @@ export const CardBody = ({ className, ...p }: React.HTMLAttributes<HTMLDivElemen
 )
 
 const badge = cva(
-  'inline-flex items-center gap-1.5 rounded-xs px-2 py-0.5 font-mono text-[10.5px] font-500 uppercase tracking-[0.14em]',
+  'inline-flex items-center gap-1.5 rounded-xs px-2 py-0.5 font-mono text-[10.5px] font-500 uppercase tracking-[0.14em] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]',
   {
     variants: {
       tone: {
@@ -72,8 +72,9 @@ const btn = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-primary text-surface shadow-1 hover:bg-primary-2 hover:shadow-2',
-        water: 'bg-water text-surface shadow-1 hover:brightness-105',
+        primary:
+          'bg-gradient-to-b from-primary-2 to-primary text-surface shadow-1 ring-1 ring-primary/30 hover:from-primary-3 hover:to-primary-2 hover:shadow-2',
+        water: 'bg-gradient-to-b from-water-soft to-water text-surface shadow-1 ring-1 ring-water/30 hover:brightness-105',
         outline:
           'border border-line-strong bg-surface/60 text-primary hover:bg-frost hover:border-primary',
         ghost: 'text-ink-soft hover:bg-frost hover:text-ink',
@@ -113,10 +114,14 @@ export function Progress({
           ? 'linear-gradient(90deg,#7fa8cc,#3d6d9b)'
           : 'linear-gradient(90deg,#6fe7c7,#2dc993)'
   return (
-    <div className={cn('relative h-1.5 w-full overflow-hidden rounded-full bg-ink-ghost/25', className)}>
+    <div className={cn('relative h-1.5 w-full overflow-hidden rounded-full bg-ink-ghost/25 ring-1 ring-inset ring-primary/8', className)}>
       <div
         className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
-        style={{ width: `${ratio * 100}%`, background: fill }}
+        style={{
+          width: `${ratio * 100}%`,
+          background: fill,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45), 0 0 6px -1px rgba(26,64,110,0.25)',
+        }}
       />
     </div>
   )

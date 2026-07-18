@@ -256,7 +256,7 @@ export function FaultGrid() {
 
         <div className="hairline my-3.5" />
 
-        <div className="space-y-2 pr-1">
+        <div className="stagger space-y-2 pr-1">
           {FLEET.map((u) => (
             <FaultCard
               key={u.id}

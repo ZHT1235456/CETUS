@@ -1,35 +1,47 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
+import { Dot } from '@/components/ui'
 import { useFleetRuntime } from '@/hooks/useFleetRuntime'
 
-const TITLES: Record<string, { zh: string; en: string; sub: string }> = {
-  '/architecture': {
+const TITLES: { prefix: string; zh: string; en: string; sub: string }[] = [
+  {
+    prefix: '/architecture',
     zh: '系统架构',
     en: 'System Architecture',
-    sub: '云·边·端 与 域控制器功能域',
+    sub: '云侧 · 边侧 · 端侧分层职责 · 数据闭环与紧急直达',
   },
-  '/cloud': {
+  {
+    prefix: '/cloud',
     zh: '云',
     en: 'Cloud Tier',
-    sub: '集群全局态势 · 六艇正六边形编队 · 水域实时编队可视化',
+    sub: '集群决策 · 数据收集 · 状态检测与历史回溯 · 全生命周期数据管理',
   },
-  '/edge': {
+  {
+    prefix: '/edge',
     zh: '边',
     en: 'Edge Tier',
-    sub: '编队 Leader-Follower 控制拓扑 与 节点健康监测',
+    sub: '任务管理 · 多艇状态汇聚 · 局部规划与在线重构 · 边缘自治与应急处理',
   },
-  '/terminal': {
+  {
+    prefix: '/terminal',
     zh: '端',
     en: 'Terminal Tier',
-    sub: '单艇域总线控制面 · 待扩展',
+    sub: '端侧五域 · 感知 / 运动控制 / 机能 / 通信 · 决策与运行状态管理',
   },
+]
+
+function resolveTitle(pathname: string) {
+  return (
+    TITLES.find((t) => pathname === t.prefix || pathname.startsWith(`${t.prefix}/`)) ??
+    TITLES[0]
+  )
 }
 
 export function Layout() {
   useFleetRuntime()
   const { pathname } = useLocation()
-  const match = TITLES[pathname] ?? TITLES['/architecture']
+  const match = resolveTitle(pathname)
 
   return (
     <div className="relative flex h-screen w-screen overflow-hidden">
@@ -59,12 +71,12 @@ export function Layout() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="panel-flat flex items-center gap-5 rounded-md px-4 py-2.5">
-              <Meter label="在线编队" value="6 / 6" />
-              <span className="h-8 w-px bg-line-soft" />
-              <Meter label="健康均值" value="97.4%" tone="ok" />
-              <span className="h-8 w-px bg-line-soft" />
-              <Meter label="告警" value="0" />
+            <div className="panel-flat flex items-center gap-5 rounded-md px-4 py-2.5 shadow-1">
+              <Meter label="在线编队" value="6 / 6" dot="ok" pulse />
+              <span className="h-8 w-px bg-gradient-to-b from-transparent via-line-strong/60 to-transparent" />
+              <Meter label="健康均值" value="97.4%" tone="ok" dot="ok" />
+              <span className="h-8 w-px bg-gradient-to-b from-transparent via-line-strong/60 to-transparent" />
+              <Meter label="告警" value="0" dot="ok" />
             </div>
             <div className="scan-sheen grid h-12 w-12 place-items-center rounded-[12px] border border-primary/20 bg-gradient-to-b from-primary to-primary-2 font-display text-[13px] font-700 text-surface shadow-2">
               东南
@@ -80,10 +92,25 @@ export function Layout() {
   )
 }
 
-function Meter({ label, value, tone }: { label: string; value: string; tone?: 'ok' }) {
+function Meter({
+  label,
+  value,
+  tone,
+  dot,
+  pulse,
+}: {
+  label: string
+  value: string
+  tone?: 'ok'
+  dot?: 'ok' | 'warn' | 'alert'
+  pulse?: boolean
+}) {
   return (
     <div className="min-w-[68px] text-right">
-      <div className="chip text-ink-faint">{label}</div>
+      <div className="chip flex items-center justify-end gap-1.5 text-ink-faint">
+        {dot && <Dot tone={dot} pulse={pulse} />}
+        {label}
+      </div>
       <div
         className={
           'mt-0.5 font-mono text-[16px] font-600 tabular-nums ' +

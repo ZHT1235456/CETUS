@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils'
 import { useLocalClock } from './Layout'
 
 const NAV = [
-  { to: '/architecture', label: '系统架构', en: 'Architecture', Icon: Network, idx: '01' },
-  { to: '/cloud', label: '云', en: 'Cloud', Icon: Cloud, idx: '02' },
-  { to: '/edge', label: '边', en: 'Edge', Icon: Waypoints, idx: '03' },
-  { to: '/terminal', label: '端', en: 'Terminal', Icon: TerminalSquare, idx: '04' },
+  { to: '/architecture', label: '系统架构', en: 'Architecture', Icon: Network, idx: '01', match: '/architecture' },
+  { to: '/cloud/overview', label: '云', en: 'Cloud', Icon: Cloud, idx: '02', match: '/cloud' },
+  { to: '/edge/overview', label: '边', en: 'Edge', Icon: Waypoints, idx: '03', match: '/edge' },
+  { to: '/terminal/overview', label: '端', en: 'Terminal', Icon: TerminalSquare, idx: '04', match: '/terminal' },
 ] as const
 
 export function Sidebar() {
@@ -19,7 +19,7 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-6 pt-7 pb-5">
         <div className="flex items-center gap-3">
-          <div className="relative grid h-11 w-11 place-items-center rounded-[12px] bg-gradient-to-b from-primary to-primary-2 text-surface shadow-2">
+          <div className="scan-sheen relative grid h-11 w-11 place-items-center rounded-[12px] bg-gradient-to-br from-primary-3 via-primary to-primary-2 text-surface shadow-2 ring-1 ring-primary/50">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
               <path
                 d="M2.5 14c3.2-2.4 5-2.4 8.2 0s5 2.4 8.2 0"
@@ -47,7 +47,7 @@ export function Sidebar() {
             />
           </div>
           <div className="leading-tight">
-            <div className="font-display text-[21px] font-700 tracking-tight text-ink">
+            <div className="shimmer font-display text-[21px] font-700 tracking-tight">
               CETUS
             </div>
             <div className="chip text-ink-faint">Cloud-Edge-Terminal USV System</div>
@@ -63,10 +63,13 @@ export function Sidebar() {
       <div className="hairline mx-5" />
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-1.5 px-3 py-4">
+      <nav className="stagger flex flex-1 flex-col gap-1.5 px-3 py-4">
         <div className="px-3 pb-2 label-eyebrow">Navigation</div>
-        {NAV.map(({ to, label, en, Icon, idx }) => {
-          const active = pathname === to
+        {NAV.map(({ to, label, en, Icon, idx, match }) => {
+          const active =
+            match === '/architecture'
+              ? pathname === '/architecture'
+              : pathname === match || pathname.startsWith(`${match}/`)
           return (
             <NavLink
               key={to}
@@ -74,12 +77,12 @@ export function Sidebar() {
               className={cn(
                 'group relative flex items-center gap-3.5 rounded-md px-3 py-3 transition-all duration-300',
                 active
-                  ? 'bg-primary/9 text-primary shadow-[inset_0_0_0_1px_rgba(26,64,110,0.08)]'
+                  ? 'bg-gradient-to-r from-primary/12 via-primary/8 to-primary/4 text-primary shadow-[inset_0_0_0_1px_rgba(26,64,110,0.10)]'
                   : 'text-ink-soft hover:bg-frost hover:text-ink',
               )}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-full bg-primary shadow-[0_0_12px_rgba(26,64,110,0.35)]" />
+                <span className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-primary-3 to-primary shadow-[0_0_12px_rgba(26,64,110,0.35)]" />
               )}
               <span
                 className={cn(
@@ -112,8 +115,8 @@ export function Sidebar() {
 
       {/* Footer telemetry */}
       <div className="mt-auto px-5 pb-5">
-        <div className="hairline mb-4" />
-        <div className="space-y-2.5 rounded-md border border-line-soft/80 bg-surface/45 px-3 py-3">
+        <div className="hairline mb-3.5" />
+        <div className="space-y-2 rounded-md border border-line-soft/80 bg-surface/45 px-3 py-2.5 shadow-1">
           <Telemetry label="LOCAL TIME" value={clock} />
           <Telemetry label="FLEET LINK" value="ONLINE" dot />
           <Telemetry label="WS TUNNEL" value="STANDBY" tone="warn" />

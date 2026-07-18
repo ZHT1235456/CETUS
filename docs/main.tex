@@ -1,0 +1,769 @@
+% !TeX program = xelatex
+% 推荐编译顺序：XeLaTeX -> BibTeX -> XeLaTeX -> XeLaTeX
+% 完整 TeX Live 环境将使用 ctexart；精简环境可通过后备字体路径编译。
+\IfFileExists{ctexart.cls}
+  {\documentclass[UTF8,11pt,a4paper,fontset=fandol]{ctexart}}
+  {\documentclass[11pt,a4paper]{article}}
+
+\newif\ifhasctex
+\IfFileExists{ctexart.cls}{\hasctextrue}{\hasctexfalse}
+
+\usepackage{fontspec}
+\ifhasctex
+\else
+  \providecommand{\FallbackFontPath}{./fonts/}
+  \setmainfont[
+    Path=\FallbackFontPath,
+    BoldFont=NotoSansCJKsc-Bold.otf,
+    ItalicFont=NotoSansCJKsc-Regular.otf,
+    BoldItalicFont=NotoSansCJKsc-Bold.otf
+  ]{NotoSansCJKsc-Regular.otf}
+  \setsansfont[
+    Path=\FallbackFontPath,
+    BoldFont=NotoSansCJKsc-Bold.otf,
+    ItalicFont=NotoSansCJKsc-Regular.otf,
+    BoldItalicFont=NotoSansCJKsc-Bold.otf
+  ]{NotoSansCJKsc-Regular.otf}
+  \XeTeXlinebreaklocale "zh"
+  \XeTeXlinebreakskip=0pt plus 1pt
+  \renewcommand{\contentsname}{目录}
+  \renewcommand{\figurename}{图}
+  \renewcommand{\tablename}{表}
+  \renewcommand{\refname}{参考文献}
+\fi
+
+\usepackage[a4paper,top=2.35cm,bottom=2.35cm,left=2.35cm,right=2.35cm,headheight=15pt]{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{needspace}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+
+\definecolor{CloudFill}{HTML}{DCEAF7}
+\definecolor{CloudLine}{HTML}{4D78A8}
+\definecolor{EdgeFill}{HTML}{F8E5C6}
+\definecolor{EdgeLine}{HTML}{B87522}
+\definecolor{EndFill}{HTML}{DDEEDB}
+\definecolor{EndLine}{HTML}{4E8758}
+\definecolor{SoftGray}{HTML}{F3F5F7}
+\definecolor{LineGray}{HTML}{7A838D}
+\definecolor{FlowBlue}{HTML}{356FA3}
+\definecolor{FlowTeal}{HTML}{2D7F78}
+\definecolor{EmergencyRed}{HTML}{B23A3A}
+\definecolor{TextDark}{HTML}{26313B}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=CloudLine,
+  citecolor=EndLine,
+  urlcolor=FlowBlue,
+  pdfauthor={朱华天},
+  pdftitle={云-边-端协同与艇端多域控制的无人艇集群系统总体架构设计}
+}
+
+\setstretch{1.32}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.38em}
+\setlist{nosep,leftmargin=2.2em}
+\setlist[enumerate]{label=\arabic*.,ref=\arabic*}
+\renewcommand{\arraystretch}{1.36}
+\setlength{\tabcolsep}{5pt}
+
+\titleformat{\section}{\sffamily\bfseries\Large\color{TextDark}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\sffamily\bfseries\large\color{TextDark}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\sffamily\bfseries\normalsize\color{TextDark}}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.5em}{0.8em}
+\titlespacing*{\subsection}{0pt}{1.15em}{0.55em}
+
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  labelsep=quad,
+  justification=centering,
+  skip=7pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small 云-边-端协同无人艇集群系统总体架构设计}
+\fancyhead[R]{\small 朱华天}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyhead[L]{\small 云-边-端协同无人艇集群系统总体架构设计}
+  \fancyhead[R]{\small 朱华天}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcommand{\term}[1]{\textbf{#1}}
+
+\tikzset{
+  every node/.style={font=\small,align=center,text=TextDark},
+  cloudmodule/.style={draw=CloudLine,fill=CloudFill,rounded corners=3pt,minimum width=2.75cm,minimum height=0.92cm,text width=2.55cm,thick},
+  edgemodule/.style={draw=EdgeLine,fill=EdgeFill,rounded corners=3pt,minimum width=2.75cm,minimum height=0.92cm,text width=2.55cm,thick},
+  endmodule/.style={draw=EndLine,fill=EndFill,rounded corners=3pt,minimum width=2.30cm,minimum height=0.92cm,text width=2.10cm,thick},
+  layerlabel/.style={font=\sffamily\bfseries\large,minimum width=1.15cm},
+  cloudlayer/.style={draw=CloudLine,fill=CloudFill!40,rounded corners=6pt,thick,inner sep=8pt},
+  edgelayer/.style={draw=EdgeLine,fill=EdgeFill!40,rounded corners=6pt,thick,inner sep=8pt},
+  endlayer/.style={draw=EndLine,fill=EndFill!40,rounded corners=6pt,thick,inner sep=8pt},
+  subblock/.style={draw=LineGray,fill=white,rounded corners=2pt,minimum width=2.85cm,minimum height=0.66cm,text width=2.58cm},
+  smallsub/.style={draw=LineGray,fill=white,rounded corners=2pt,minimum width=2.40cm,minimum height=0.62cm,text width=2.15cm},
+  groupcloud/.style={draw=CloudLine,fill=CloudFill!48,rounded corners=5pt,thick,inner sep=8pt},
+  groupedge/.style={draw=EdgeLine,fill=EdgeFill!48,rounded corners=5pt,thick,inner sep=8pt},
+  groupend/.style={draw=EndLine,fill=EndFill!48,rounded corners=5pt,thick,inner sep=8pt},
+  endpoint/.style={draw=LineGray,fill=SoftGray,rounded corners=3pt,minimum width=2.15cm,minimum height=0.72cm,text width=1.95cm},
+  usv/.style={trapezium,trapezium left angle=72,trapezium right angle=108,draw=EndLine,fill=EndFill,thick,minimum width=2.15cm,minimum height=0.72cm},
+  dataflow/.style={-{Stealth[length=2.5mm]},draw=FlowBlue,thick},
+  uploadflow/.style={-{Stealth[length=2.5mm]},draw=FlowTeal,thick},
+  peerflow/.style={{Stealth[length=2.2mm]}-{Stealth[length=2.2mm]},draw=FlowTeal,thick},
+  emergencyflow/.style={-{Stealth[length=2.6mm]},draw=EmergencyRed,thick,dashed},
+  historyflow/.style={-{Stealth[length=2.4mm]},draw=LineGray,thick,dashed},
+  monitorflow/.style={-{Stealth[length=2.2mm]},draw=LineGray,semithick},
+  flowlabel/.style={font=\scriptsize,fill=white,inner sep=1.5pt,text=TextDark}
+}
+
+\begin{document}
+
+\begin{titlepage}
+  \thispagestyle{empty}
+  \begin{center}
+    \vspace*{2.0cm}
+    {\sffamily\bfseries\LARGE 云-边-端协同与艇端多域控制的\par}
+    \vspace{0.45cm}
+    {\sffamily\bfseries\LARGE 无人艇集群系统总体架构设计\par}
+    \vspace{1.0cm}
+    {\Large 系统总体设计说明书\par}
+    \vspace{0.8cm}
+    \begin{tikzpicture}
+      \draw[CloudLine,line width=1.1pt] (0,0)--(10.5,0);
+      \draw[EdgeLine,line width=1.1pt] (0,-0.13)--(10.5,-0.13);
+      \draw[EndLine,line width=1.1pt] (0,-0.26)--(10.5,-0.26);
+    \end{tikzpicture}
+    \vfill
+    \renewcommand{\arraystretch}{1.7}
+    \begin{tabular}{C{2.3cm} C{7.2cm}}
+      \textbf{作者} & 朱华天 \\
+      \textbf{文档类型} & 总体架构设计 \\
+      \textbf{版本} & V1.0 \\
+      \textbf{日期} & 2026年7月 \\
+    \end{tabular}
+    \vfill
+  \end{center}
+\end{titlepage}
+
+\pagenumbering{Roman}
+\setcounter{page}{1}
+
+\section*{摘要}
+\addcontentsline{toc}{section}{摘要}
+
+面向无人艇集群在任务规模扩大、通信质量波动、单艇状态差异和远程接管需求并存条件下的系统设计问题，本文提出一种云端、岸基边缘侧与艇端协同的总体架构。架构按照决策范围和响应时效划分职责：云端承担集群级全局航迹规划、任务重规划、应急响应与接管，以及集中数据收集、实时监测、历史回溯和全生命周期数据管理；岸基边缘侧承担任务解析与下发、多艇状态汇聚、局部航迹规划、在线编队重构和局部应急处理；艇端按照感知域、运动控制域、通信域、机舱域及预测与健康状态管理域组织信息处理。
+
+系统采用分层闭环与例外直达相结合的数据路径。正常任务和状态数据沿云端、边端、艇端逐级传递，紧急状态下允许云端向艇端发送直接接管指令；艇间链路用于交换邻艇状态、协同意图及编队信息。云端内部将在线决策路径与离线管理路径分离，历史过程回溯不参与集群在线决策。健康管理域只负责检测、评估和上报，不直接干预运动控制。本文进一步给出四类典型运行流程、接口数据分类，以及链路中断条件下的分级处置原则，为后续详细设计、软件实现、联调测试和规模化扩展提供统一的架构基线。
+
+\noindent\textbf{关键词：}无人艇集群；云-边-端协同；岸基边缘计算；集群决策；多域控制；健康状态管理
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{绪论}
+
+\subsection{设计背景}
+
+无人水面艇具有部署灵活、人员风险低和持续作业能力强等特点，已逐步应用于水域巡检、环境监测、测绘、搜索和警戒等任务。随着任务由单艇执行扩展为多艇协同，系统关注点从单艇航迹跟踪转向任务分配、集群态势形成、编队维持、故障隔离和跨链路控制权管理。相关综述表明，多无人艇协同涉及轨迹导引、路径导引和目标导引等多类问题，网络化与集群化已成为无人艇技术的重要发展方向\cite{peng2021,liu2016}。
+
+集中式云平台具备全局数据汇聚、跨任务分析和统一决策能力，但远程链路的时延、带宽和可用性具有不确定性。边缘计算将部分处理能力部署在数据源附近，可减少不必要的远程传输，并为局部闭环提供更稳定的响应条件\cite{shi2016,satyanarayanan2017}。云边端架构进一步强调计算和决策任务在不同层级之间的合理分工\cite{dong2024}。对无人艇集群而言，岸基边缘站既可以汇聚多艇状态，也可以在云边链路中断期间维持局部任务连续性。
+
+本文针对通用水域任务提出总体架构，不限定具体的公网、专网、卫星或自组网制式，也不规定特定艇型和集群规模。设计重点放在职责边界、数据路径、控制权优先级及异常条件下的功能保持关系，为后续结合具体装备和任务参数进行详细设计留出空间。
+
+\subsection{设计目标}
+
+总体架构需要同时满足以下目标：
+
+\begin{enumerate}
+  \item 建立清晰的云端、岸基边缘侧和艇端职责边界，防止同一决策在多个层级重复执行或相互覆盖；
+  \item 形成从艇端状态采集到边端汇聚、云端决策，再到任务下发和执行反馈的闭环；
+  \item 在远程链路波动时维持必要的边缘自治和艇端安全处置能力；
+  \item 支持多艇规模扩展、单艇离线和在线编队重构；
+  \item 将实时状态监测与历史数据管理分开，保证在线决策链路简洁、可解释；
+  \item 规定云端紧急接管的触发条件和优先级，保留人工干预能力；
+  \item 通过统一的数据分类、时间标识和任务标识支撑跨层级信息一致性。
+\end{enumerate}
+
+\subsection{设计范围与术语约定}
+
+本文所称\term{云端}，是指具备集群全局视图、集中数据管理和远程接管能力的中心系统；\term{边端}特指部署在任务水域附近的岸基边缘站；\term{艇端}是指每艘无人艇内部的感知、控制、通信、机舱状态和健康管理功能集合。
+
+本文所称\term{艇端多域控制}，是指艇端按照感知域、运动控制域、通信域、机舱域以及预测与健康状态管理域进行功能划分，并通过域间数据交互共同支撑任务执行。其中，运动控制域负责控制相关计算，其他功能域负责状态感知、信息传输、设备监测和健康评估。本文不展开具体运动控制算法、动力学方程和规划算法，也不将健康评估结果直接反馈为运动控制约束。
+
+\section{需求分析与设计原则}
+
+\subsection{任务与运行假设}
+
+架构面向由多艘同构或近似同构无人艇构成的集群。云端与岸基边缘站之间使用远程链路，岸基边缘站与艇端之间使用近场无线链路，艇端之间保留双向协同链路。通信技术保持抽象，以便根据任务水域、覆盖范围和合规要求选择具体实现。
+
+正常情况下，云端下发全局任务和航迹，岸基边缘站完成解析、局部细化和多艇协调，艇端根据接收到的任务信息进行计算并反馈状态。紧急情况下，云端可以绕过边端向艇端发送直接接管指令。该直达路径只承担例外控制，不替代正常分层路径。
+
+\subsection{功能需求}
+
+\begin{table}[htbp]
+  \centering
+  \caption{系统主要功能需求}
+  \label{tab:functional-requirements}
+  \small
+  \begin{tabularx}{\textwidth}{C{2.5cm} C{2.6cm} Y Y}
+    \toprule
+    需求类别 & 主要承担层级 & 输入 & 预期输出 \\
+    \midrule
+    全局任务规划 & 云端 & 任务目标、集群实时态势 & 全局航迹、任务分配或重规划结果 \\
+    任务执行协调 & 边端 & 云端任务、多艇状态 & 解析后的任务、局部航迹及编队调整指令 \\
+    艇端任务执行 & 艇端 & 边端任务或云端接管指令 & 控制相关计算数据、执行状态与任务反馈 \\
+    状态与健康监测 & 艇端、边端、云端 & 运行、通信、机舱及健康数据 & 当前态势、异常事件与健康评估结果 \\
+    在线编队重构 & 边端 & 故障、离线、环境变化或任务调整信息 & 更新后的局部规划和编队关系 \\
+    应急响应与接管 & 云端 & 严重故障、边端不可用或人工操作请求 & 高优先级直接接管指令 \\
+    历史过程回溯 & 云端 & 日志、档案、故障和健康历史 & 任务复盘、故障定位与过程证据 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{非功能需求}
+
+系统需要满足实时性、可靠性、安全性、可扩展性和可追溯性要求。实时性通过分层处理实现：艇端承担本地高频数据处理，边端承担局部快速协调，云端承担全局和长周期任务。可靠性通过最近有效任务保持、失联策略和升级上报实现。安全性重点约束指令来源、权限、优先级和审计记录。可扩展性要求边端状态汇聚和云端数据管理能够按艇标识扩展。可追溯性要求任务、指令、状态和事件之间能够通过统一标识建立关联。
+
+\subsection{设计原则}
+
+\begin{enumerate}
+  \item \term{分层负责。}全局决策、局部协调和单艇执行分别归属云端、边端和艇端；下层不承担需要全局数据的长期决策，上层不进入艇端高频闭环。
+  \item \term{数据就近处理。}原始状态首先在艇端形成可用信息，多艇状态在边端汇聚，全局历史数据在云端保存。
+  \item \term{在线与离线分离。}实时状态监测直接服务集群决策，历史过程回溯只服务事后分析、故障定位和任务复盘。
+  \item \term{正常路径稳定。}常规任务严格沿云端至边端至艇端的层级传递，避免多源普通指令并发竞争。
+  \item \term{异常路径可控。}云端直达艇端只在紧急接管条件下使用，并具有明确的来源标识、优先级和退出条件。
+  \item \term{退化运行有界。}链路中断后仅维持已授权的最近有效任务或预配置策略，不生成超出当前任务边界的新目标。
+\end{enumerate}
+
+\section{系统总体架构}
+
+\subsection{总体分层}
+
+系统总体架构如图\ref{fig:overall-architecture}所示。云端形成集群级全局视图，岸基边缘站形成任务水域内的局部集群视图，艇端形成单艇实时视图。各层级的一级功能模块在总体图中展开，具体子功能分别在后续架构图中说明。
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[layerlabel,text=CloudLine] (clabel) at (-7.0,4.15) {云端};
+    \node[cloudmodule] (c1) at (-5.15,4.15) {集群决策};
+    \node[cloudmodule] (c2) at (-1.75,4.15) {数据收集};
+    \node[cloudmodule] (c3) at (1.65,4.15) {状态监测与\\历史回溯};
+    \node[cloudmodule] (c4) at (5.05,4.15) {全生命周期\\数据管理};
+
+    \node[layerlabel,text=EdgeLine] (elabel) at (-7.0,1.25) {边端};
+    \node[edgemodule] (e1) at (-5.15,1.25) {任务管理};
+    \node[edgemodule] (e2) at (-1.75,1.25) {多艇状态汇聚};
+    \node[edgemodule] (e3) at (1.65,1.25) {局部规划与\\在线重构};
+    \node[edgemodule] (e4) at (5.05,1.25) {边缘自治与\\应急处理};
+
+    \node[layerlabel,text=EndLine] (tlabel) at (-7.0,-1.68) {艇端};
+    \node[endmodule] (t1) at (-5.55,-1.68) {感知域};
+    \node[endmodule] (t2) at (-2.78,-1.68) {运动控制域};
+    \node[endmodule] (t3) at (0,-1.68) {通信域};
+    \node[endmodule] (t4) at (2.78,-1.68) {机舱域};
+    \node[endmodule] (t5) at (5.55,-1.68) {预测与健康状态\\管理域};
+
+    \begin{scope}[on background layer]
+      \node[cloudlayer,fit=(clabel)(c1)(c2)(c3)(c4)] (cloud) {};
+      \node[edgelayer,fit=(elabel)(e1)(e2)(e3)(e4)] (edge) {};
+      \node[endlayer,fit=(tlabel)(t1)(t2)(t3)(t4)(t5)] (terminal) {};
+    \end{scope}
+
+    \node[usv] (u1) at (-3.8,-4.15) {无人艇 01};
+    \node[usv] (u2) at (0,-4.15) {无人艇 02};
+    \node[usv] (u3) at (3.8,-4.15) {无人艇 $N$};
+    \node at (2.0,-4.15) {$\cdots$};
+
+    \draw[dataflow] ([xshift=-11mm]cloud.south east) -- node[flowlabel,right]{全局任务、航迹\\与重规划结果} ([xshift=-11mm]edge.north east);
+    \draw[uploadflow] ([xshift=11mm]edge.north west) -- node[flowlabel,left]{集群状态、进度\\与故障事件} ([xshift=11mm]cloud.south west);
+    \draw[dataflow] ([xshift=-11mm]edge.south east) -- node[flowlabel,right]{任务指令、局部航迹\\与编队调整} ([xshift=-11mm]terminal.north east);
+    \draw[uploadflow] ([xshift=11mm]terminal.north west) -- node[flowlabel,left]{运行、健康、通信状态\\与任务反馈} ([xshift=11mm]edge.south west);
+    \draw[emergencyflow] (cloud.east) to[out=-8,in=8,looseness=0.95] node[flowlabel,right,text=EmergencyRed]{紧急接管指令} (terminal.east);
+
+    \draw[dataflow] (terminal.south) -- node[flowlabel,right]{五域功能部署} (u2.north);
+    \draw[LineGray,semithick] (terminal.south) |- (u1.north);
+    \draw[LineGray,semithick] (terminal.south) |- (u3.north);
+    \draw[peerflow] (u1.east) -- node[flowlabel,above]{艇间协同} (u2.west);
+    \draw[peerflow] (u2.east) -- node[flowlabel,above]{艇间协同} (u3.west);
+  \end{tikzpicture}}
+  \caption{云-边-端协同的无人艇集群系统总体架构}
+  \label{fig:overall-architecture}
+\end{figure}
+
+\Needspace{15\baselineskip}
+\subsection{层级职责}
+
+\begin{table}[htbp]
+  \centering
+  \caption{云端、边端与艇端的职责边界}
+  \label{tab:layer-boundary}
+  \small
+  \begin{tabularx}{\textwidth}{C{2.0cm} C{2.5cm} Y Y}
+    \toprule
+    层级 & 决策范围 & 核心职责 & 明确边界 \\
+    \midrule
+    云端 & 全局、跨任务、长周期 & 全局航迹规划、任务重规划、集中监测、历史管理和应急接管 & 不进入艇端高频运动控制；不依赖历史回溯形成在线集群决策 \\
+    边端 & 任务水域、多艇、局部时域 & 任务解析、状态汇聚、局部规划、在线重构和局部应急处理 & 不替代云端进行跨任务全局规划；不修改云端任务目标边界 \\
+    艇端 & 单艇、本地、实时 & 感知、控制相关计算、通信状态、机舱状态及健康评估 & 健康评估不直接控制运动；失联策略不得超出预配置权限 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{数据闭环与控制权}
+
+正常数据闭环包括上行状态链和下行任务链。艇端生成位置、姿态、速度、通信质量、机舱状态、异常和健康评估等数据，边端按艇标识完成汇聚并形成集群局部态势，云端在此基础上完成全局监测与决策。云端决策经边端解析后形成可供艇端执行的任务信息，艇端再反馈执行状态和进度。
+
+指令控制权按照来源和场景划分。边端指令是正常运行时的直接任务来源；云端直达艇端的接管指令只在严重故障、边端不可用、任务风险显著上升或人工接管时启用。接管指令具有高于边端普通指令的优先级，并携带明确的任务会话、来源、时效和退出条件。接管结束后，艇端需在收到恢复指令或新任务会话后返回正常分层路径。
+
+\section{云端系统设计}
+
+\subsection{云端定位}
+
+云端承担全局信息汇聚与集群级决策，不直接承担常规艇端实时控制。其价值在于利用多艇完整状态和跨任务数据形成统一视图，支持全局航迹规划、任务重规划、应急响应与集中管理。考虑到在线决策和历史分析对数据时效的要求不同，云端采用在线路径与离线路径分离的设计。
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[endpoint] (input) at (-7.2,0.35) {边端汇聚数据};
+
+    \node[subblock] (dc1) at (-4.7,1.40) {运行状态数据采集};
+    \node[subblock] (dc2) at (-4.7,0.35) {任务数据采集};
+    \node[subblock] (dc3) at (-4.7,-0.70) {健康数据采集};
+
+    \node[subblock] (sm1) at (-0.9,1.40) {实时状态监测};
+    \node[subblock] (sm2) at (-0.9,-1.40) {历史过程回溯};
+
+    \node[subblock] (de1) at (3.2,2.45) {全局航迹规划};
+    \node[subblock] (de2) at (3.2,1.40) {任务重规划};
+    \node[subblock] (de3) at (3.2,0.35) {应急响应与接管};
+
+    \node[subblock] (lm1) at (3.2,-1.95) {健康状态管理};
+    \node[subblock] (lm2) at (3.2,-3.00) {故障与寿命管理};
+    \node[subblock] (lm3) at (3.2,-4.05) {日志与档案管理};
+
+    \begin{scope}[on background layer]
+      \node[groupcloud,fit=(dc1)(dc2)(dc3),label={[font=\bfseries,text=CloudLine]above:数据收集}] (collect) {};
+      \node[groupcloud,fit=(sm1)(sm2),label={[font=\bfseries,text=CloudLine]above:状态监测与历史回溯}] (monitor) {};
+      \node[groupcloud,fit=(de1)(de2)(de3),label={[font=\bfseries,text=CloudLine]above:集群决策}] (decision) {};
+      \node[groupcloud,fit=(lm1)(lm2)(lm3),label={[font=\bfseries,text=CloudLine]above:全生命周期数据管理}] (lifecycle) {};
+    \end{scope}
+
+    \node[endpoint] (output) at (6.35,1.40) {向边端下发决策};
+    \node[endpoint,draw=EmergencyRed] (direct) at (6.35,0.35) {紧急直达艇端};
+
+    \draw[uploadflow] (input) -- (collect.west);
+    \draw[dataflow] (dc1.east) -- node[flowlabel,above]{实时数据} (sm1.west);
+    \draw[dataflow] (sm1.east) -- node[flowlabel,above]{当前集群态势} (de2.west);
+    \draw[dataflow] (decision.east) -- (output.west);
+    \draw[emergencyflow] (de3.east) -- (direct.west);
+    \draw[uploadflow] (collect.south) |- node[flowlabel,below,pos=0.35]{归档数据} (lifecycle.west);
+    \draw[historyflow] (lifecycle.west) -| node[flowlabel,below,pos=0.68]{历史数据查询} (sm2.south);
+  \end{tikzpicture}}
+  \caption{云端功能架构与数据流}
+  \label{fig:cloud-architecture}
+\end{figure}
+
+\subsection{在线决策路径}
+
+在线路径由数据收集、实时状态监测和集群决策构成，如图\ref{fig:cloud-architecture}上半部分所示。数据收集接收边端上传的运行状态、任务数据和当前健康状态，并完成按任务和艇标识组织。实时状态监测从当前数据形成集群态势，包括各艇位置、姿态、速度、任务阶段、通信状态和健康评估摘要。集群决策只使用当前态势及当前任务约束，不读取全生命周期档案。
+
+集群决策包括三项功能。全局航迹规划面向整个任务区域确定各艇或艇组的总体航行路径；任务重规划在任务条件、艇数量或风险状态发生变化时更新任务分配和航迹；应急响应与接管在异常等级达到预设条件时生成应急策略，必要时通过直达链路向艇端发送高优先级指令。
+
+当前健康状态参与实时态势形成时，只反映此刻是否存在异常、故障或能力下降。它与长期故障趋势、寿命统计和历史健康档案保持概念分离。因此，云端可以依据某艇当前不可用状态开展任务重规划，同时不需要访问该艇的历史寿命数据。
+
+\subsection{离线管理路径}
+
+离线路径由数据收集、全生命周期数据管理和历史过程回溯构成。全生命周期数据管理保存健康状态、故障与寿命信息、任务日志和设备档案，并维持数据与艇标识、任务会话和时间范围的关联。船载数据服务器和船舶设备数据标准强调对设备数据采集、命名和共享方式进行统一描述\cite{iso19847,iso19848}，本文在总体设计阶段吸收其数据一致性思想，不限定具体标准实现。
+
+历史过程回溯按任务、艇或事件读取档案，重建状态变化、指令下发和执行反馈的时间顺序。其输出用于事后分析、故障定位和任务复盘，不向集群决策提供在线输入，也不通过灰色虚线之外的任何路径连接集群决策。该约束可避免历史查询负载或离线分析结果改变实时决策链路。
+
+\subsection{云端输入与输出}
+
+\begin{table}[htbp]
+  \centering
+  \caption{云端主要输入与输出}
+  \label{tab:cloud-io}
+  \small
+  \begin{tabularx}{\textwidth}{C{2.2cm} C{2.4cm} Y Y}
+    \toprule
+    类型 & 对象 & 内容 & 使用目的 \\
+    \midrule
+    输入 & 集群运行状态 & 多艇位置、姿态、速度及任务阶段 & 实时监测和全局航迹规划 \\
+    输入 & 当前健康状态 & 异常、故障和健康评估摘要 & 判断艇可用性并触发任务重规划 \\
+    输入 & 通信与进度 & 链路质量、在线状态和任务完成度 & 风险判断、接管条件判断 \\
+    输入 & 历史档案 & 日志、故障、寿命和历史任务记录 & 回溯、定位和复盘 \\
+    输出 & 常规决策 & 全局任务、全局航迹和重规划结果 & 由边端解析和下发 \\
+    输出 & 紧急指令 & 接管目标、时效、动作和退出条件 & 紧急情况下直接送达艇端 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{岸基边缘侧系统设计}
+
+\subsection{边端定位}
+
+岸基边缘站是云端全局决策与艇端本地执行之间的协调层。它掌握任务水域内多艇的近实时状态，能够将云端任务转化为艇端可用的局部任务，并在云边链路暂时不可用时维持最近一次有效任务。该部署方式兼顾岸基设备的维护便利性和局部响应能力。
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[endpoint] (cloudin) at (-7.0,1.95) {云端任务输入};
+    \node[endpoint] (boatin) at (-7.0,-2.70) {多艇状态输入};
+
+    \node[subblock] (tm1) at (-4.35,3.00) {任务接收、解析与下发};
+    \node[subblock] (tm2) at (-4.35,1.95) {任务执行协调};
+    \node[subblock] (tm3) at (-4.35,0.90) {任务进度跟踪与反馈};
+
+    \node[subblock] (ag1) at (-4.35,-1.65) {运行状态汇聚};
+    \node[subblock] (ag2) at (-4.35,-2.70) {健康状态汇聚};
+    \node[subblock] (ag3) at (-4.35,-3.75) {通信状态汇聚};
+
+    \node[subblock] (pl1) at (0.25,2.50) {局部航迹规划};
+    \node[subblock] (pl2) at (0.25,1.45) {在线编队重构};
+
+    \node[subblock] (au1) at (0.25,-1.65) {局部故障监测};
+    \node[subblock] (au2) at (0.25,-2.70) {边缘自主处理};
+    \node[subblock] (au3) at (0.25,-3.75) {升级上报};
+
+    \begin{scope}[on background layer]
+      \node[groupedge,fit=(tm1)(tm2)(tm3),label={[font=\bfseries,text=EdgeLine]above:任务管理}] (task) {};
+      \node[groupedge,fit=(ag1)(ag2)(ag3),label={[font=\bfseries,text=EdgeLine]above:多艇状态汇聚}] (aggregate) {};
+      \node[groupedge,fit=(pl1)(pl2),label={[font=\bfseries,text=EdgeLine]above:局部规划与在线重构}] (planning) {};
+      \node[groupedge,fit=(au1)(au2)(au3),label={[font=\bfseries,text=EdgeLine]above:边缘自治与应急处理}] (autonomy) {};
+    \end{scope}
+
+    \node[endpoint] (boatout) at (5.30,1.95) {向艇端下发任务};
+    \node[endpoint] (cloudout) at (5.30,-2.70) {向云端反馈与上报};
+
+    \draw[dataflow] (cloudin) -- (task.west);
+    \draw[uploadflow] (boatin) -- (aggregate.west);
+    \draw[dataflow] (task.east) -- node[flowlabel,above]{任务约束} (planning.west);
+    \draw[uploadflow] (aggregate.north east) to[out=25,in=-25] node[flowlabel,pos=0.55,right]{状态与进度} (task.south east);
+    \draw[uploadflow] (aggregate.north east) to[out=35,in=-125] node[flowlabel,pos=0.68,above]{多艇态势} (planning.south west);
+    \draw[dataflow] (planning.east) -- node[flowlabel,above]{局部航迹与编队调整} (boatout.west);
+    \draw[monitorflow] (aggregate.east) -- (autonomy.west);
+    \draw[dataflow] (au1) -- (au2);
+    \draw[dataflow] (au2) -- (au3);
+    \draw[dataflow] (au2.east) -| node[flowlabel,above,pos=0.72]{局部处置指令} (boatout.south);
+    \draw[uploadflow] (task.east) -| node[flowlabel,above,pos=0.70]{任务进度} (cloudout.north);
+    \draw[uploadflow] (autonomy.east) -- node[flowlabel,above]{无法局部解决} (cloudout.west);
+  \end{tikzpicture}}
+  \caption{岸基边缘侧功能架构与数据流}
+  \label{fig:edge-architecture}
+\end{figure}
+
+\subsection{任务管理}
+
+任务管理接收云端全局任务、航迹和重规划结果，对任务标识、目标、时间有效性和适用艇组进行解析，再向局部规划功能提供约束。任务执行协调负责处理多艇任务之间的先后关系和资源冲突；任务进度跟踪与反馈根据艇端状态判断任务阶段，并向云端报告已接收、已下发、执行中、完成、失败或中止等状态。
+
+任务管理不自行改变云端给定的任务目标。云边链路中断时，边端只继续执行最近一次已经验证并生效的任务，直到链路恢复、任务完成或触发本地终止条件。恢复连接后，边端需要先对任务会话和版本进行比对，再决定继续当前任务或接收新版本。
+
+\subsection{多艇状态汇聚}
+
+多艇状态汇聚按运行、健康和通信三类组织艇端上报。运行状态用于构建多艇位置、姿态、速度和任务进度视图；健康状态用于标识异常、故障和当前健康评估；通信状态用于反映时延、丢包率和信号强度。汇聚结果保留艇标识、采集时间和接收时间，避免将不同时间点的数据误认为同一集群快照。
+
+当某艇数据超过预设新鲜度阈值时，边端不再把该数据视为当前有效状态，而是将该艇标记为状态陈旧或离线。该标记可触发在线编队重构，也会进入升级上报内容。阈值由具体通信条件和任务风险配置，本文不设定固定数值。
+
+\subsection{局部规划与在线重构}
+
+局部航迹规划在云端全局航迹和当前多艇态势之间建立衔接，处理局部环境变化、艇间间隔和任务执行顺序。在线编队重构可由艇端故障、健康异常、艇离线、通信质量持续下降、环境变化、云端任务调整或任务进度偏差触发。
+
+重构过程首先确认触发事件和受影响艇，随后冻结当前有效任务版本，评估剩余可用艇及其状态，再形成新的局部航迹和编队关系。重构结果下发艇端，同时向云端反馈触发原因、受影响范围和新任务版本。若边端无法在现有任务目标内形成可行方案，则不继续扩大本地决策范围，转入升级上报。
+
+\subsection{边缘自治与应急处理}
+
+局部故障监测接收多艇状态汇聚结果，识别艇端上报的异常、故障、状态陈旧和通信中断事件。边缘自主处理在既定权限内执行任务暂停、局部重新分配、编队重构或失联策略下发。升级上报用于处理边端无法解决、影响全局任务或需要云端接管的事件。
+
+边缘自治强调任务连续性，同时受最近有效任务和预配置策略约束。岸基边缘站不在云边失联期间生成新的全局任务，也不覆盖云端紧急直达指令。云端接管生效后，边端保留状态汇聚和反馈能力，并停止发送与接管指令冲突的普通任务更新。
+
+\section{艇端多域控制设计}
+
+\subsection{五域划分}
+
+艇端采用五域划分，以数据来源和功能责任为主要依据。感知域形成位置和姿态计算数据；运动控制域维护控制输入和速度计算数据；通信域维护通信时延、丢包率和信号强度；机舱域维护电源电量和船舱温度；预测与健康状态管理域执行异常检测、故障状态监测和健康状态评估。中国船级社智能船舶相关规范将智能航行、智能机舱和智能集成等作为智能船舶的重要功能方向\cite{ccs2024}，本文的五域划分与上述功能关注点保持兼容，但面向小型无人艇集群进行了简化。
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[endpoint] (edgecmd) at (-7.0,3.75) {边端任务指令};
+    \node[endpoint,draw=EmergencyRed] (cloudcmd) at (7.0,4.35) {云端紧急接管};
+    \node[endpoint] (peer) at (7.0,3.05) {艇间双向协同};
+
+    \node[smallsub] (co1) at (-2.55,3.75) {通信时延};
+    \node[smallsub] (co2) at (0,3.75) {丢包率};
+    \node[smallsub] (co3) at (2.55,3.75) {信号强度};
+
+    \node[smallsub] (pe1) at (-4.1,0.85) {位置};
+    \node[smallsub] (pe2) at (-4.1,0) {姿态};
+
+    \node[smallsub] (mo1) at (0,0.85) {控制输入};
+    \node[smallsub] (mo2) at (0,0) {速度};
+
+    \node[smallsub] (ca1) at (4.1,0.85) {电源电量};
+    \node[smallsub] (ca2) at (4.1,0) {船舱温度};
+
+    \node[smallsub] (ph1) at (-2.60,-2.70) {异常检测};
+    \node[smallsub] (ph2) at (0,-2.70) {故障状态监测};
+    \node[smallsub] (ph3) at (2.60,-2.70) {健康状态评估};
+
+    \begin{scope}[on background layer]
+      \node[groupend,fit=(co1)(co2)(co3),label={[font=\bfseries,text=EndLine]above:通信域}] (comm) {};
+      \node[groupend,fit=(pe1)(pe2),label={[font=\bfseries,text=EndLine]above:感知域}] (perception) {};
+      \node[groupend,fit=(mo1)(mo2),label={[font=\bfseries,text=EndLine]above:运动控制域}] (motion) {};
+      \node[groupend,fit=(ca1)(ca2),label={[font=\bfseries,text=EndLine]above:机舱域}] (cabin) {};
+      \node[groupend,fit=(ph1)(ph2)(ph3),label={[font=\bfseries,text=EndLine]above:预测与健康状态管理域}] (phm) {};
+    \end{scope}
+
+    \coordinate (busL) at (-5.20,-1.35);
+    \coordinate (busP) at (-4.10,-1.35);
+    \coordinate (busC) at (0,-1.35);
+    \coordinate (busR) at (4.10,-1.35);
+
+    \draw[dataflow] (edgecmd) -- (comm.west);
+    \draw[emergencyflow] (cloudcmd) -- (comm.east);
+    \draw[peerflow] (comm.east) -- (peer.west);
+
+    \draw[dataflow] (comm.south) -- node[flowlabel,left]{任务与控制相关指令} (motion.north west);
+    \draw[uploadflow] (motion.north east) to[out=55,in=-75] node[flowlabel,right]{控制计算状态} (comm.south east);
+    \draw[dataflow] (perception.east) -- node[flowlabel,above]{位置、姿态} (motion.west);
+    \draw[uploadflow] (perception.north) to[out=85,in=-145] node[flowlabel,left]{常规状态上报} (comm.south west);
+    \draw[uploadflow] (cabin.north) to[out=95,in=-35] node[flowlabel,right]{机舱状态上报} (comm.south east);
+
+    \draw[LineGray,semithick] (busL) -- (busR);
+    \draw[monitorflow] (perception.south) -- (busP);
+    \draw[monitorflow] (motion.south) -- (busC);
+    \draw[monitorflow] (cabin.south) -- (busR);
+    \draw[monitorflow] (comm.west) to[out=-165,in=105] node[flowlabel,left]{通信监测数据} (busL);
+    \draw[monitorflow] (busL) -- node[flowlabel,left]{四域监测数据} (phm.north west);
+    \draw[uploadflow] (phm.east) to[out=5,in=-55,looseness=1.35] node[flowlabel,right]{异常、故障与健康评估上报} (comm.east);
+  \end{tikzpicture}}
+  \caption{艇端五域功能架构与数据交互}
+  \label{fig:terminal-architecture}
+\end{figure}
+
+\subsection{感知域与运动控制域}
+
+感知域提供位置和姿态计算数据，是运动控制域形成控制相关计算结果的主要状态来源。位置表示艇在统一任务坐标或导航坐标下的空间位置，姿态表示航向及其他与运动相关的姿态信息。总体设计只规定数据关系，不限定卫星导航、惯性测量或其他传感器实现。
+
+运动控制域包含控制输入和速度两类计算数据。控制输入表示控制计算过程中形成的内部量，速度表示用于状态计算和反馈的运动量。本文不把两者展开为推进器、舵机或具体执行机构接口，也不建立动力学方程。运动控制域接收通信域传递的任务和控制相关指令，接收感知域的位置、姿态数据，并将计算状态经通信域上报。
+
+\subsection{通信域}
+
+通信域是艇端面向外部链路的数据入口和出口。它接收边端普通任务、云端紧急接管指令和邻艇协同信息，同时上报感知、运动、机舱及健康状态。通信时延、丢包率和信号强度既作为通信状态上报，也作为预测与健康状态管理域的监测数据。
+
+通信域需要识别消息来源、任务会话和优先级。普通情况下只接受当前任务会话内的边端指令；紧急接管时接受云端高优先级指令，并抑制与其冲突的边端普通更新。该行为是通信数据处理规则，不形成新的安全仲裁域。
+
+\subsection{机舱域}
+
+机舱域提供电源电量和船舱温度数据。两类数据一方面作为常规状态经通信域上报，另一方面送入预测与健康状态管理域用于异常检测和健康评估。本文不规定电源管理或温控控制策略，机舱域只描述状态数据边界。
+
+\subsection{预测与健康状态管理域}
+
+预测与健康状态管理域对来自感知、运动控制、通信和机舱域的数据执行异常检测、故障状态监测和健康状态评估。状态监测与基于状态的维修研究通常强调数据采集、诊断、预测和信息呈现之间的连续关系\cite{jardine2006,iso13374}。本文在总体层面保留检测、监测和评估三项功能，不限定具体模型或阈值算法。
+
+该域的输出包括异常事件、故障状态和健康评估结果，并统一经通信域上报边端。按照本设计边界，健康评估不直接产生限速、降级运行或安全停止指令，也不向运动控制域形成反馈箭头。需要采取运行处置时，由边端或云端依据上报结果生成相应任务指令。
+
+\section{数据流与接口设计}
+
+\subsection{数据分类}
+
+系统数据按用途分为任务与指令、运行状态、健康状态、通信状态、机舱状态、事件与日志六类。分类的目的在于明确生产者、消费者、时效属性和归档要求，并不要求每类数据采用独立物理链路。
+
+\begin{longtable}{C{2.1cm} C{2.5cm} C{2.5cm} p{7.2cm}}
+  \caption{跨层级数据分类与传递关系}\label{tab:data-classification}\\
+  \toprule
+  数据类别 & 主要生产者 & 主要消费者 & 典型内容与处理要求 \\
+  \midrule
+  \endfirsthead
+  \multicolumn{4}{c}{\tablename\ \thetable\ （续）}\\
+  \toprule
+  数据类别 & 主要生产者 & 主要消费者 & 典型内容与处理要求 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  任务与指令 & 云端、边端 & 边端、艇端 & 全局任务、全局航迹、局部航迹、编队调整、重规划和紧急接管；必须包含任务会话、版本、来源、优先级和有效期。 \\
+  运行状态 & 艇端 & 边端、云端 & 位置、姿态、速度、控制计算状态和任务阶段；需要携带艇标识、采集时间和序列信息。 \\
+  健康状态 & 艇端 & 边端、云端 & 异常、故障状态和健康评估结果；需要区分当前状态与历史档案。 \\
+  通信状态 & 艇端、边端 & 边端、云端 & 通信时延、丢包率、信号强度、在线状态和状态新鲜度；用于链路判断和在线重构触发。 \\
+  机舱状态 & 艇端 & 边端、云端 & 电源电量和船舱温度；用于常规监测、健康评估和历史记录。 \\
+  事件与日志 & 各层级 & 云端 & 指令接收、任务切换、重构、故障、接管和链路中断记录；用于审计、定位和历史回溯。 \\
+\end{longtable}
+
+\subsection{通用消息信息}
+
+跨层消息应至少携带消息类型、艇标识或艇组标识、任务会话标识、消息序列、采集时间、发送时间、来源层级、优先级、有效期和数据质量标记。任务会话标识用于区分不同任务，消息序列用于识别重复和乱序，采集时间用于判断状态新鲜度，来源和优先级用于处理边端普通指令与云端接管指令之间的关系。
+
+对于聚合数据，边端不得只使用统一的聚合发送时间替代各艇采集时间。云端接收到的集群快照需要保留各成员状态的时间差异。对于历史档案，日志记录需要同时保留业务时间和系统接收时间，以便在链路延迟或补传情况下正确回溯过程。
+
+\subsection{下行数据路径}
+
+云端至边端的常规下行内容包括任务目标、适用艇组、全局航迹、任务版本和重规划结果。边端完成接收确认、版本检查和解析后，生成艇端任务、局部航迹及编队调整信息。艇端确认任务会话有效后更新当前任务计算。
+
+云端至艇端的紧急路径只传递应急接管信息。接管消息必须包含明确的接管目标、动作范围、优先级、有效期和退出条件。艇端确认其来源和有效性后，按高优先级更新任务相关计算，并将接管接收和执行状态同时反馈云端和可用的边端链路。
+
+\subsection{上行与艇间数据路径}
+
+艇端至边端上行采用按艇标识组织的状态与事件数据。边端将多艇数据汇聚为局部集群态势，并向云端发送聚合状态、任务进度、故障事件及必要的明细。对于需要历史归档的数据，云端在接收后分别进入实时监测路径和全生命周期数据管理路径。
+
+艇间链路用于交换邻艇状态、协同意图、编队信息和必要的避碰相关信息。艇间数据不改变云端任务目标，也不承担云端紧急接管功能。艇端应将艇间协同结果作为本艇任务执行的辅助信息，并按需要向边端报告协同状态。
+
+\section{典型运行流程}
+
+\subsection{正常任务执行流程}
+
+正常任务执行遵循稳定的分层路径：
+
+\begin{enumerate}
+  \item 云端依据任务目标和当前集群态势形成全局任务与航迹，并分配任务会话和版本；
+  \item 岸基边缘站接收任务，完成有效性检查、解析和局部航迹规划；
+  \item 边端按照艇标识向各艇下发任务、局部航迹和编队要求；
+  \item 艇端通信域接收任务，感知域和运动控制域形成相应计算数据；
+  \item 艇端持续上报运行、通信、机舱和健康状态，边端形成多艇局部态势；
+  \item 边端跟踪任务进度并反馈云端，云端实时状态监测更新全局态势；
+  \item 任务完成后，各层记录完成状态，相关日志进入全生命周期数据管理。
+\end{enumerate}
+
+正常流程中，云端不直接向艇端发送普通任务，艇端也不绕过边端向云端发起常规任务变更。该约束能够使任务版本和控制来源保持清晰。
+
+\subsection{在线编队重构流程}
+
+在线编队重构可以由艇端故障或健康异常、某艇离线、通信质量持续下降、环境变化、云端任务调整或任务进度偏差触发。具体流程如下：
+
+\begin{enumerate}
+  \item 多艇状态汇聚识别触发条件，记录触发艇、触发时间和相关数据；
+  \item 边端确认当前有效任务版本，并评估剩余在线艇及其运行、健康和通信状态；
+  \item 局部规划与在线重构功能在原任务目标边界内重新组织局部航迹和编队关系；
+  \item 新版本任务下发相关艇，未受影响艇只接收必要的编队更新；
+  \item 边端监测新编队的接收与执行状态，并向云端反馈重构原因和结果；
+  \item 若边端无法形成可行方案，则停止本地扩展决策，向云端升级上报并等待重规划或接管。
+\end{enumerate}
+
+\subsection{故障检测与升级上报流程}
+
+故障流程从艇端健康管理开始。预测与健康状态管理域完成异常检测、故障状态监测和健康状态评估后，通过通信域上报边端。边端局部故障监测结合运行状态和通信状态判断事件影响范围。
+
+若故障可以在当前任务边界内通过暂停单艇任务、重新分配任务或在线编队重构处理，边端执行自主处理并将结果反馈云端。若故障影响全局任务、边端无法判断可行处置、多个艇同时异常，或故障伴随边端能力下降，则边端生成升级上报。云端根据实时态势选择任务重规划、终止任务或启动紧急接管。所有检测、判断、处置和确认消息均进入事件日志，以支持后续定位。
+
+\subsection{云端紧急接管流程}
+
+紧急接管支持自动响应和人工操作并存。自动触发条件可以包括严重故障、边端不可用、任务风险显著升高或普通指令链路无法维持；人工接管由具备相应权限的操作人员发起。国际海事组织关于自主船舶试验的临时指南强调风险管理、人员胜任和安全基础设施\cite{imo1604}，相关监管范围研究也将远程操作和责任边界列为重要议题\cite{imo1638}。因此，接管流程需要保留明确的人员确认、指令来源和审计记录。
+
+接管时，云端生成带有高优先级和有效期的直接指令。艇端通信域确认来源后，将任务相关信息交给运动控制域更新计算状态，并暂时抑制冲突的边端普通指令。艇端将接管确认和执行状态反馈云端；边端若仍可用，则继续承担状态汇聚和转发，但停止发送冲突更新。风险解除后，云端发出退出接管或新的任务会话，艇端完成版本切换并恢复正常分层路径。
+
+\subsection{链路中断时的分级处置}
+
+\begin{table}[htbp]
+  \centering
+  \caption{链路中断的分级处置原则}
+  \label{tab:link-loss}
+  \small
+  \begin{tabularx}{\textwidth}{C{3.0cm} C{3.1cm} Y Y}
+    \toprule
+    中断场景 & 判断依据 & 继续能力 & 处置原则 \\
+    \midrule
+    云边链路中断 & 心跳或数据超过预设阈值 & 边端仍可与艇端通信 & 边端继续最近一次有效任务，不生成新全局目标；恢复后比对任务版本 \\
+    边艇短时中断 & 单艇状态暂时缺失 & 艇端仍可本地运行 & 艇端继续当前任务，边端标记状态新鲜度下降并持续尝试恢复 \\
+    边艇持续中断 & 超过预设失联阈值 & 艇端仅具本地和可能的艇间能力 & 艇端执行预配置的保持、返航或安全停止策略，边端触发重构和上报 \\
+    边端不可用 & 多艇无法与边端通信 & 云艇直达链路可用 & 云端在风险条件满足时启动紧急接管；艇端按高优先级处理 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{非功能设计}
+
+\subsection{实时性与数据新鲜度}
+
+系统不采用单一实时性指标约束所有数据。艇端位置、姿态和运动计算属于本地实时数据；边端多艇状态和局部规划属于近实时数据；云端任务重规划和集中监测属于全局业务数据；历史档案属于离线数据。各类数据分别配置采样、上报、超时和保留策略，避免高频原始数据占用远程链路，也避免低频健康或日志数据被遗漏。
+
+状态新鲜度由采集时间、接收时间和预设阈值共同判断。边端和云端在展示或使用集群状态时，应明确区分当前有效、延迟、陈旧和离线状态。对延迟到达的数据可以补充进入历史档案，但不得倒序改变已经执行的在线决策。
+
+\subsection{可靠性与连续性}
+
+可靠性设计围绕功能保持范围展开。云端不可用时，边端维持最近有效任务；边端不可用时，艇端按失联策略运行；单艇不可用时，边端尝试在线编队重构；严重异常且直达链路可用时，云端可以接管。每一级退化运行都具有明确边界，避免在信息不足时扩大自主决策范围。
+
+任务和指令采用会话与版本管理。重复消息不应导致重复切换，旧版本不应覆盖新版本，超出有效期的紧急指令不应继续生效。关键状态和事件需要确认或通过后续状态间接确认，以便区分消息已发送、已接收和已执行。
+
+\subsection{安全性与审计}
+
+总体设计阶段的安全重点包括身份可信、权限分离、指令完整性、优先级约束和日志审计。云端紧急接管权限应与普通任务规划权限区分，人工接管操作应记录操作者、时间、目标艇、原因和退出条件。艇端仅处理来源有效、任务会话一致且未过期的指令。
+
+历史过程回溯使用日志和档案重建过程，但不具备在线指令权限。该设计将查询能力与控制能力分开，可降低离线分析误影响在线任务的风险。具体密码算法、认证协议和网络分区方案属于后续详细设计内容，本文不新增安全平台模块。
+
+\subsection{可扩展性}
+
+集群扩展主要影响艇标识管理、边端状态汇聚负载、云端存储规模和任务规划复杂度。架构不依赖固定艇数，总体图以无人艇 01、无人艇 02 至无人艇 $N$ 表示可扩展集群。新增艇接入时，应完成身份登记、能力描述和任务会话同步，再进入多艇状态汇聚与任务分配范围。
+
+当单一岸基边缘站的覆盖或处理能力不足时，可在后续部署设计中划分多个任务水域和边缘站，但本文仍以单岸基边缘站为逻辑边端，不展开多边缘站协同。该限制保证当前架构图与已确定的物理部署一致。
+
+\subsection{可验证性与验收关注点}
+
+\begin{table}[htbp]
+  \centering
+  \caption{架构级验证与验收关注点}
+  \label{tab:verification}
+  \small
+  \begin{tabularx}{\textwidth}{C{2.5cm} Y Y}
+    \toprule
+    验证类别 & 验证内容 & 通过判据方向 \\
+    \midrule
+    职责边界 & 普通任务、局部重构和紧急接管的发起层级 & 不出现普通多源指令竞争，接管优先级明确 \\
+    数据闭环 & 任务下发、状态上报、进度反馈和日志归档 & 各阶段可关联到同一任务会话与艇标识 \\
+    在线与离线分离 & 历史查询负载及回溯操作 & 不改变集群在线决策输入和已生效任务 \\
+    编队重构 & 故障、离线、通信下降和任务调整触发 & 在权限范围内形成新版本，无法处理时升级上报 \\
+    链路中断 & 云边中断、边艇短时及持续中断 & 分别进入最近任务保持或预配置失联策略 \\
+    紧急接管 & 自动或人工触发、执行和退出 & 指令来源、优先级、有效期和审计记录完整 \\
+    健康管理边界 & 异常检测、故障监测与健康评估 & 结果只上报，不直接形成运动控制反馈 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{总结}
+
+本文完成了无人艇集群云端、岸基边缘侧和艇端协同的总体架构设计。云端负责全局决策、集中监测和生命周期数据管理；岸基边缘侧负责任务解析、多艇状态汇聚、局部规划、在线重构和局部应急处理；艇端以五域结构组织感知、运动控制计算、通信、机舱状态及健康评估。正常任务采用云端至边端至艇端的分层链路，紧急情况下保留云端直达艇端的接管链路，艇间使用双向协同链路。
+
+云端设计将实时状态监测和集群决策组成在线路径，将全生命周期数据管理和历史过程回溯组成离线路径。历史回溯完全不参与在线集群决策。艇端健康管理域只完成检测、评估和上报，不直接干预运动控制。通过任务会话、版本、来源、优先级和时间信息，系统可以在正常运行、在线重构、故障上报、紧急接管及链路中断等场景下保持明确的状态关系。
+
+后续详细设计可在本架构基线上进一步确定具体通信制式、接口字段、消息编码、规划算法、运动控制实现、安全机制和量化性能指标，并通过仿真、半实物和水上试验逐步验证。
+
+\clearpage
+\sloppy
+\IfFileExists{gbt7714-numerical.bst}
+  {\bibliographystyle{gbt7714-numerical}}
+  {\bibliographystyle{unsrt}}
+\bibliography{references}
+
+\end{document}

@@ -29,6 +29,7 @@ __pycache__/
 
 # 3D model files
 *.glb
+!public/assets/*.glb
 *.gltf
 *.bin
 *.obj

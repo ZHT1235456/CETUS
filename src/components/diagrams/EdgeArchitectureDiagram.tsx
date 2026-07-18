@@ -20,8 +20,8 @@ export function EdgeArchitectureDiagram({ className }: { className?: string }) {
         </marker>
       </defs>
 
-      <Ep x={16} y={70} label="云侧任务输入" />
-      <Ep x={16} y={360} label="多艇状态输入" />
+      <Ep x={0} y={70} w={112} label="云侧任务输入" />
+      <Ep x={0} y={360} w={112} label="多艇状态输入" />
 
       <Frame x={150} y={30} w={180} h={220} title="任务管理" />
       <Box x={170} y={70} label="任务接收、解析与下发" />
@@ -45,12 +45,10 @@ export function EdgeArchitectureDiagram({ className }: { className?: string }) {
       <Ep x={720} y={100} label="向端侧下发任务" />
       <Ep x={720} y={380} label="向云侧反馈与上报" />
 
-      <path d="M136 95 L150 95" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ea-blue)" className="flow-edge" />
-      <path d="M136 385 L150 385" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ea-teal)" className="flow-edge" />
+      <path d="M112 95 L150 95" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ea-blue)" className="flow-edge" />
+      <path d="M112 385 L150 385" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ea-teal)" className="flow-edge" />
       <path d="M330 130 L400 130" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ea-blue)" className="flow-edge" />
       <text x="335" y="120" fill={DIAG.text} fontSize="10">任务约束</text>
-      <path d="M330 160 C360 200, 360 240, 400 240" fill="none" stroke={DIAG.flowTeal} strokeWidth="1.8" markerEnd="url(#ea-teal)" className="flow-edge" />
-      <text x="345" y="210" fill={DIAG.text} fontSize="10">多艇态势</text>
       <path d="M560 130 L720 125" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ea-blue)" className="flow-edge" />
       <text x="580" y="118" fill={DIAG.text} fontSize="10">局部航迹与编队调整</text>
       <path d="M330 385 L380 385" stroke={DIAG.lineGray} strokeWidth="1.6" />
@@ -110,11 +108,11 @@ function Box({
   )
 }
 
-function Ep({ x, y, label }: { x: number; y: number; label: string }) {
+function Ep({ x, y, w = 120, label }: { x: number; y: number; w?: number; label: string }) {
   return (
     <g>
-      <rect x={x} y={y} width={120} height="48" rx="6" fill={DIAG.softGray} stroke={DIAG.lineGray} strokeWidth="1.6" />
-      <text x={x + 60} y={y + 26} textAnchor="middle" dominantBaseline="middle" fill={DIAG.text} fontSize="11" fontWeight="600">
+      <rect x={x} y={y} width={w} height="48" rx="6" fill={DIAG.softGray} stroke={DIAG.lineGray} strokeWidth="1.6" />
+      <text x={x + w / 2} y={y + 26} textAnchor="middle" dominantBaseline="middle" fill={DIAG.text} fontSize="11" fontWeight="600">
         {label}
       </text>
     </g>

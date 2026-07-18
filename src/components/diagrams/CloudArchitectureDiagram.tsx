@@ -23,7 +23,7 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
         </marker>
       </defs>
 
-      <Endpoint x={8} y={210} w={108} label="边侧汇聚数据" />
+      <Endpoint x={0} y={210} w={100} label="边侧汇聚数据" />
 
       {/* 数据收集 */}
       <GroupFrame x={130} y={70} w={170} h={280} title="数据收集" />
@@ -43,16 +43,16 @@ export function CloudArchitectureDiagram({ className }: { className?: string }) 
       <Sub x={570} y={210} label="应急响应与接管" onClick={() => navigate('/cloud/decision')} />
 
       {/* 全生命周期 */}
-      <GroupFrame x={550} y={300} w={170} h={190} title="全生命周期数据管理" onClick={() => navigate('/cloud/lifecycle')} />
-      <Sub x={570} y={340} label="健康状态管理" onClick={() => navigate('/cloud/lifecycle')} />
-      <Sub x={570} y={400} label="故障与寿命管理" onClick={() => navigate('/cloud/lifecycle')} />
-      <Sub x={570} y={460} label="日志与档案管理" onClick={() => navigate('/cloud/lifecycle')} />
+      <GroupFrame x={550} y={300} w={170} h={196} title="全生命周期数据管理" onClick={() => navigate('/cloud/lifecycle')} />
+      <Sub x={570} y={334} label="健康状态管理" onClick={() => navigate('/cloud/lifecycle')} />
+      <Sub x={570} y={390} label="故障与寿命管理" onClick={() => navigate('/cloud/lifecycle')} />
+      <Sub x={570} y={446} label="日志与档案管理" onClick={() => navigate('/cloud/lifecycle')} />
 
       <Endpoint x={760} y={140} label="向边侧下发决策" />
       <Endpoint x={760} y={220} label="紧急直达端侧" emergency />
 
       {/* flows */}
-      <path d="M116 235 L130 235" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ca-teal)" className="flow-edge" />
+      <path d="M100 235 L130 235" stroke={DIAG.flowTeal} strokeWidth="2" markerEnd="url(#ca-teal)" className="flow-edge" />
       <path d="M300 145 L360 145" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" className="flow-edge" />
       <text x="305" y="135" fill={DIAG.text} fontSize="10">实时数据</text>
       <path d="M510 145 L570 160" stroke={DIAG.flowBlue} strokeWidth="2" markerEnd="url(#ca-blue)" className="flow-edge" />

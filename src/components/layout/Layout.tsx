@@ -9,7 +9,7 @@ const TITLES: { prefix: string; zh: string; en: string; sub: string }[] = [
     prefix: '/architecture',
     zh: '系统架构',
     en: 'System Architecture',
-    sub: '云侧 · 边侧 · 端侧分层职责 · 数据闭环与紧急直达',
+    sub: '云侧 · 边侧 · 端侧分层职责',
   },
   {
     prefix: '/cloud',

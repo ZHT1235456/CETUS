@@ -74,6 +74,14 @@ export class Wake {
   private lastSternL = new THREE.Vector3()
   private lastSternR = new THREE.Vector3()
 
+  // 渐隐尾迹重建用临时向量（避免每帧分配）
+  private tmpMid0 = new THREE.Vector3()
+  private tmpMid1 = new THREE.Vector3()
+  private tmpL0 = new THREE.Vector3()
+  private tmpR0 = new THREE.Vector3()
+  private tmpL1 = new THREE.Vector3()
+  private tmpR1 = new THREE.Vector3()
+
   constructor(
     scene: THREE.Scene,
     opts: {
@@ -223,13 +231,22 @@ export class Wake {
       const a1 = 1 - (now - ptsL[i + 1].t) / this.lifeWindow
       const al0 = Math.max(0, a0)
       const al1 = Math.max(0, a1)
+      // 宽度随存活度收窄：新段全宽，旧段收成细线（渐隐尾迹）
+      const w0 = Math.max(0.08, al0)
+      const w1 = Math.max(0.08, al1)
       const u0 = i / Math.max(1, segs)
       const u1 = (i + 1) / Math.max(1, segs)
+      this.tmpMid0.copy(ptsL[i].pos).add(ptsR[i].pos).multiplyScalar(0.5)
+      this.tmpL0.copy(ptsL[i].pos).sub(this.tmpMid0).multiplyScalar(w0).add(this.tmpMid0)
+      this.tmpR0.copy(ptsR[i].pos).sub(this.tmpMid0).multiplyScalar(w0).add(this.tmpMid0)
+      this.tmpMid1.copy(ptsL[i + 1].pos).add(ptsR[i + 1].pos).multiplyScalar(0.5)
+      this.tmpL1.copy(ptsL[i + 1].pos).sub(this.tmpMid1).multiplyScalar(w1).add(this.tmpMid1)
+      this.tmpR1.copy(ptsR[i + 1].pos).sub(this.tmpMid1).multiplyScalar(w1).add(this.tmpMid1)
       // L0, R0, R1, L1 (TriangleStrip)
-      this.setV(v++, ptsL[i].pos, al0, u0, 0)
-      this.setV(v++, ptsR[i].pos, al0, u0, 1)
-      this.setV(v++, ptsR[i + 1].pos, al1, u1, 1)
-      this.setV(v++, ptsL[i + 1].pos, al1, u1, 0)
+      this.setV(v++, this.tmpL0, al0, u0, 0)
+      this.setV(v++, this.tmpR0, al0, u0, 1)
+      this.setV(v++, this.tmpR1, al1, u1, 1)
+      this.setV(v++, this.tmpL1, al1, u1, 0)
     }
     this.ribbonGeo.setDrawRange(0, v)
     ;(this.ribbonGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true

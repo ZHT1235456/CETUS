@@ -42,7 +42,7 @@ type CameraState =
 export function CloudScene() {
   const hostRef = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [showLabels, setShowLabels] = useState(true)
+  const [showLabels, setShowLabels] = useState(false)
   const [panEnabled, setPanEnabled] = useState(false)
   const [cameraState, setCameraState] = useState<CameraState>({ kind: 'free', mode: 'overview' })
 
@@ -293,7 +293,8 @@ export function CloudScene() {
           const wake = new Wake(scene, {
             halfBeam,
             visualScale: WAKE_VISUAL_SCALE,
-            lifeWindow: 3.25,
+            maxPts: 360,
+            lifeWindow: 24,
           })
           scene.add(g)
           boats.push({

@@ -5,6 +5,8 @@ const FONT_DISPLAY = 'Chakra Petch, sans-serif'
 const FONT_BODY = 'Sora, sans-serif'
 const FONT_MONO = 'JetBrains Mono, monospace'
 const MESH = '#6E87A0'
+/** 连接带集线器穿线位置（左二下行蓝 / 右二上行青） */
+const HUB_LINE_XS = [458, 476, 524, 542] as const
 
 const HOVER_LIFT =
   'transition-all duration-300 hover:-translate-y-1 hover:[filter:drop-shadow(0_5px_10px_rgba(26,64,110,0.22))]'
@@ -18,7 +20,7 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
   return (
     <svg
-      viewBox="0 0 1000 900"
+      viewBox="0 0 1016 900"
       className={className}
       role="img"
       aria-label="云侧-边侧-端侧协同的无人艇集群系统总体架构"
@@ -156,19 +158,20 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
       {/* ── 云边协同 ──────────────────────────────────────────── */}
       <Band y={230} h={66} />
-      <path d="M424 234 L424 292" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M436 234 L436 292" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M564 292 L564 234" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M576 292 L576 234" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <text x={406} y={254} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
+      {/* 连线自云侧层框底边(y=230)出发，穿过集线器图标，精确落在边侧层框顶边(y=296) */}
+      <path d="M458 230 L458 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M476 230 L476 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M524 296 L524 230" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M542 296 L542 230" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <HubIcon cx={500} cy={263} />
+      <text x={446} y={250} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
         全局任务、航迹与重规划
       </text>
-      <text x={594} y={254} fill={DIAG.flowTeal} fontFamily={FONT_BODY} fontSize={10.5}>
-        集群状态、进度与故障
-      </text>
-      <SwitchIcon cx={500} y={238} />
-      <text x={500} y={284} textAnchor="middle" fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
+      <text x={566} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
         云边协同
+      </text>
+      <text x={566} y={286} fill={DIAG.flowTeal} fontFamily={FONT_BODY} fontSize={10.5}>
+        集群状态、进度与故障
       </text>
 
       {/* ══ 边侧 ═══════════════════════════════════════════════ */}
@@ -221,19 +224,20 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
       {/* ── 数据收发 ──────────────────────────────────────────── */}
       <Band y={568} h={64} />
-      <path d="M424 572 L424 628" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M436 572 L436 628" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M564 628 L564 572" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M576 628 L576 572" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <text x={406} y={592} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
+      {/* 连线自边侧层框底边(y=568)出发，穿过集线器图标，精确落在端侧层框顶边(y=632) */}
+      <path d="M458 568 L458 632" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M476 568 L476 632" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M524 632 L524 568" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M542 632 L542 568" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <HubIcon cx={500} cy={600} />
+      <text x={446} y={587} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
         任务指令、局部航迹与编队
       </text>
-      <text x={594} y={592} fill={DIAG.flowTeal} fontFamily={FONT_BODY} fontSize={10.5}>
-        运行、健康、通信与任务反馈
-      </text>
-      <UpDownIcon cx={500} y={576} />
-      <text x={500} y={622} textAnchor="middle" fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
+      <text x={566} y={604} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
         数据收发
+      </text>
+      <text x={566} y={623} fill={DIAG.flowTeal} fontFamily={FONT_BODY} fontSize={10.5}>
+        运行、健康、通信与任务反馈
       </text>
 
       {/* ══ 端侧 ═══════════════════════════════════════════════ */}
@@ -342,9 +346,9 @@ export function OverallArchitectureDiagram({ className }: Props) {
         className="flow-edge"
       />
       <text
-        x={940}
-        y={348}
-        transform="rotate(90 940 348)"
+        x={998}
+        y={330}
+        transform="rotate(90 998 330)"
         fill={DIAG.emergency}
         fontFamily={FONT_BODY}
         fontSize={11}
@@ -664,7 +668,58 @@ function Band({ y, h }: { y: number; h: number }) {
   )
 }
 
-/* ── 图标 ───────────────────────────────────────────────────── */
+/* ── 集线器图标（横杠 + 网口小方块 + 上下线桩节点） ──────────── */
+function HubIcon({ cx, cy }: { cx: number; cy: number }) {
+  return (
+    <g>
+      <rect
+        x={cx - 50}
+        y={cy - 7}
+        width={100}
+        height={14}
+        rx={4}
+        fill="#F2F8FE"
+        stroke={DIAG.flowBlue}
+        strokeWidth={1.6}
+      />
+      {[-32, -11, 11, 32].map((dx) => (
+        <rect
+          key={dx}
+          x={cx + dx - 3.5}
+          y={cy - 3.5}
+          width={7}
+          height={7}
+          rx={1.2}
+          fill={DIAG.flowBlue}
+          opacity={0.72}
+        />
+      ))}
+      {HUB_LINE_XS.map((x) => (
+        <circle
+          key={`t${x}`}
+          cx={x}
+          cy={cy - 7}
+          r={2.6}
+          fill={x < cx ? DIAG.flowBlue : DIAG.flowTeal}
+          stroke="#ffffff"
+          strokeWidth={0.8}
+        />
+      ))}
+      {HUB_LINE_XS.map((x) => (
+        <circle
+          key={`b${x}`}
+          cx={x}
+          cy={cy + 7}
+          r={2.6}
+          fill={x < cx ? DIAG.flowBlue : DIAG.flowTeal}
+          stroke="#ffffff"
+          strokeWidth={0.8}
+        />
+      ))}
+    </g>
+  )
+}
+
 function CloudIcon({ x, y }: { x: number; y: number }) {
   return (
     <g
@@ -706,47 +761,6 @@ function ShipIcon({ x, y }: { x: number; y: number }) {
       <rect x="14.5" y="9.5" width="2.5" height="2" fill="url(#oa-g-ship)" />
       <line x1="11" y1="7.5" x2="11" y2="4.5" fill="none" strokeLinecap="round" />
       <line x1="11" y1="5" x2="13.5" y2="6.2" fill="none" strokeLinecap="round" />
-    </g>
-  )
-}
-
-function SwitchIcon({ cx, y }: { cx: number; y: number }) {
-  return (
-    <g>
-      <line x1={cx - 18} y1={y} x2={cx - 18} y2={y - 5} stroke={DIAG.flowBlue} strokeWidth={1.4} />
-      <line x1={cx + 18} y1={y} x2={cx + 18} y2={y - 5} stroke={DIAG.flowBlue} strokeWidth={1.4} />
-      <line x1={cx - 18} y1={y + 26} x2={cx - 18} y2={y + 31} stroke={DIAG.flowBlue} strokeWidth={1.4} />
-      <line x1={cx + 18} y1={y + 26} x2={cx + 18} y2={y + 31} stroke={DIAG.flowBlue} strokeWidth={1.4} />
-      <rect x={cx - 28} y={y} width={56} height={26} rx={7} fill="#F2F8FE" stroke={DIAG.flowBlue} strokeWidth={1.6} />
-      {[0, 1, 2, 3].map((i) => (
-        <rect key={i} x={cx - 21 + i * 12} y={y + 8} width={8} height={6} rx={1} fill={DIAG.flowBlue} opacity={0.75} />
-      ))}
-      <circle cx={cx - 22} cy={y + 19.5} r={1.4} fill={DIAG.flowTeal} />
-      <circle cx={cx - 16} cy={y + 19.5} r={1.4} fill={DIAG.flowTeal} opacity={0.5} />
-    </g>
-  )
-}
-
-function UpDownIcon({ cx, y }: { cx: number; y: number }) {
-  return (
-    <g>
-      <rect x={cx - 19} y={y} width={38} height={26} rx={7} fill="#F2F8FE" stroke={DIAG.flowBlue} strokeWidth={1.6} />
-      <path
-        d={`M ${cx - 7} ${y + 5} L ${cx - 7} ${y + 19} M ${cx - 10} ${y + 16} L ${cx - 7} ${y + 20} L ${cx - 4} ${y + 16}`}
-        fill="none"
-        stroke={DIAG.flowBlue}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d={`M ${cx + 7} ${y + 21} L ${cx + 7} ${y + 7} M ${cx + 4} ${y + 10} L ${cx + 7} ${y + 6} L ${cx + 10} ${y + 10}`}
-        fill="none"
-        stroke={DIAG.flowTeal}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </g>
   )
 }

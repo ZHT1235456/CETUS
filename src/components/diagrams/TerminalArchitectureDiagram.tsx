@@ -68,11 +68,12 @@ export function TerminalArchitectureDiagram({ className }: { className?: string 
       <path d="M240 230 L300 230" stroke={DIAG.flowBlue} strokeWidth="1.8" markerEnd="url(#ta-blue)" className="flow-edge" />
       <text x="245" y="220" fill={DIAG.text} fontSize="10">位置、姿态</text>
 
+      {/* 四域监测数据总线：通信域经运动控制/机舱域间隙(x=500)垂直下落，水平总线汇入 PHM，不穿越任何域框 */}
       <line x1={100} y1={340} x2={660} y2={340} stroke={DIAG.lineGray} strokeWidth="1.4" />
       <path d="M160 300 L160 340" stroke={DIAG.lineGray} strokeWidth="1.4" />
       <path d="M380 300 L380 340" stroke={DIAG.lineGray} strokeWidth="1.4" />
       <path d="M600 300 L600 340" stroke={DIAG.lineGray} strokeWidth="1.4" />
-      <path d="M220 120 L120 340 L220 360" fill="none" stroke={DIAG.lineGray} strokeWidth="1.4" />
+      <path d="M500 120 L500 360" fill="none" stroke={DIAG.lineGray} strokeWidth="1.4" />
       <text x="90" y="330" fill={DIAG.text} fontSize="10">四域监测数据</text>
       <path d="M580 415 C700 415, 700 160, 640 120" fill="none" stroke={DIAG.flowTeal} strokeWidth="1.8" markerEnd="url(#ta-teal)" className="flow-edge" />
       <text x="680" y="280" fill={DIAG.text} fontSize="10">异常、故障与健康评估上报</text>

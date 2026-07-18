@@ -54,13 +54,13 @@ export default function CloudLifecycle() {
       </div>
 
       {/* 卷宗 A：艇档案索引（台账） */}
-      <section className="panel relative mt-2 rounded-lg p-4">
+      <section className="panel relative mt-2 rounded-lg p-4" style={{ overflow: 'visible' }}>
         <FolderTab label="卷宗 A-01 · 艇档案索引" />
         <div className="mb-3 flex items-baseline justify-between">
           <h3 className="font-display text-[15px] font-600">艇档案索引</h3>
           <span className="font-mono text-[11px] tracking-wider text-ink-faint">LEDGER · 台账</span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="max-h-[320px] overflow-auto">
           <table className="w-full min-w-[560px] border-collapse text-left text-[13px]">
             <thead>
               <tr className="text-ink-faint" style={{ borderBottom: `2px solid ${KRAFT.ledgerHead}` }}>
@@ -104,22 +104,25 @@ export default function CloudLifecycle() {
       </section>
 
       {/* 卷宗 B：事件时间轴 */}
-      <section className="panel relative mt-2 rounded-lg p-4">
+      <section className="panel relative mt-2 rounded-lg p-4" style={{ overflow: 'visible' }}>
         <FolderTab label="卷宗 B-02 · 事件簿" />
         <div className="mb-3 flex items-baseline justify-between">
           <h3 className="font-display text-[15px] font-600">事件时间轴</h3>
           <span className="font-mono text-[11px] tracking-wider text-ink-faint">LOG BOOK</span>
         </div>
-        <ol className="relative ml-1 space-y-3.5 border-l border-line-strong/40 pl-5">
-          {LOG_EVENTS.map((e) => (
-            <li key={e.t + e.text} className="relative flex gap-4">
-              <span className="absolute -left-[25.5px] top-1.5 h-2 w-2 rounded-full bg-water ring-2 ring-water/25" />
-              <span className="w-14 shrink-0 font-mono text-[12px] tabular-nums text-ink-faint">{e.t}</span>
-              <Badge tone="ghost">{e.kind}</Badge>
-              <span className="text-[13px] text-ink-soft">{e.text}</span>
-            </li>
-          ))}
-        </ol>
+        {/* 左侧留出 8px 内边距，滚动时时间轴圆点不被裁切 */}
+        <div className="max-h-[320px] overflow-y-auto pl-2">
+          <ol className="relative ml-1 space-y-3.5 border-l border-line-strong/40 pl-5">
+            {LOG_EVENTS.map((e) => (
+              <li key={e.t + e.text} className="relative flex gap-4">
+                <span className="absolute -left-[25.5px] top-1.5 h-2 w-2 rounded-full bg-water ring-2 ring-water/25" />
+                <span className="w-14 shrink-0 font-mono text-[12px] tabular-nums text-ink-faint">{e.t}</span>
+                <Badge tone="ghost">{e.kind}</Badge>
+                <span className="text-[13px] text-ink-soft">{e.text}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
     </div>
   )
@@ -177,7 +180,7 @@ function ArchiveStamp() {
 function FolderTab({ label }: { label: string }) {
   return (
     <span
-      className="absolute -top-3 left-5 rounded-t-md px-3 py-1 font-mono text-[10.5px] font-600 tracking-[0.12em] text-ink-soft"
+      className="absolute -top-3.5 left-5 rounded-t-md px-3.5 py-1 font-mono text-[11px] font-600 leading-[1.5] tracking-[0.12em] text-ink-soft"
       style={{
         background: KRAFT.tabBg,
         border: `1px solid ${KRAFT.cardBorder}`,

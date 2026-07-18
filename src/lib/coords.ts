@@ -38,6 +38,16 @@ export const SCENE_CENTER = {
 } as const
 
 /**
+ * 世界（对方业务坐标）→ 场景单位的缩放系数。
+ *
+ * 业务坐标幅值在数百量级（作业区 330..430 / -500..-440），
+ * 而艇体、尾迹与镜头距离均按个位数场景单位设计；
+ * 渲染边界在 toScenePosition 之后对水平分量统一乘以该系数，
+ * 把整个作业区压缩进镜头可视范围。竖直分量（天）不缩放。
+ */
+export const WORLD_TO_SCENE = 0.25
+
+/**
  * 对方坐标 → 本场景位置。
  * scene.x = their.y（东），scene.y = their.z（天），scene.z = their.x（北）
  * @param draft 吃水/竖直偏移，加在场景 Y（天）上

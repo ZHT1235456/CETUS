@@ -4,7 +4,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useEffect, useRef, useState } from 'react'
 import { Crosshair, Move, Tags } from 'lucide-react'
 import { FLEET } from '@/config/fleet'
-import { toSceneForward, toScenePosition } from '@/lib/coords'
+import { WORLD_TO_SCENE, toSceneForward, toScenePosition } from '@/lib/coords'
 import { frameAt } from '@/lib/fleetReplay'
 import { useFleetStore } from '@/store/usvStore'
 import { cn } from '@/lib/utils'
@@ -84,14 +84,15 @@ export function CloudScene() {
     host.appendChild(labelRenderer.domElement)
 
     const scene = new THREE.Scene()
-    // 自由视角（斜视/俯视）锚点：初始时刻的集群中心，不跟随移动中的集群
+    // 自由视角（斜视/俯视）锚点：初始时刻的集群中心，不跟随移动中的集群。
+    // 业务坐标为数百量级，乘以 WORLD_TO_SCENE 压缩到场景单位（与每帧艇位同一尺度）。
     const cam = (() => {
       const f = frameAt(0)
       const c = new THREE.Vector3()
       for (const u of FLEET) {
         const p = toScenePosition({ x: f[u.id].x, y: f[u.id].y, z: 0 }, 0)
-        c.x += p.x
-        c.z += p.z
+        c.x += p.x * WORLD_TO_SCENE
+        c.z += p.z * WORLD_TO_SCENE
       }
       return c.multiplyScalar(1 / FLEET.length)
     })()
@@ -195,16 +196,19 @@ export function CloudScene() {
           { x: unit.x, y: unit.y, z: unit.z },
           b.model.yOffset,
         )
+        // 水平分量按 WORLD_TO_SCENE 压缩到场景尺度；竖直分量（含船模吃水偏移）不缩放
+        const sx = pos.x * WORLD_TO_SCENE
+        const sz = pos.z * WORLD_TO_SCENE
         const fwd = toSceneForward(Math.cos(unit.heading), Math.sin(unit.heading))
-        b.group.position.set(pos.x, pos.y, pos.z)
+        b.group.position.set(sx, pos.y, sz)
         b.group.rotation.y = headingToYRot(fwd.fx, fwd.fz)
         b.sceneFx = fwd.fx
         b.sceneFz = fwd.fz
         const state: BoatKinematicState = {
-          x: pos.x,
+          x: sx,
           // 船模带有自身的垂直校准偏移，尾迹必须独立锚定在水面。
           y: 0,
-          z: pos.z,
+          z: sz,
           fx: fwd.fx,
           fz: fwd.fz,
           length: b.model.length,

@@ -110,8 +110,7 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
       {[
         { x: 124, label: '集群决策', to: '/cloud/decision' },
-        { x: 318, label: '数据收集', to: '/cloud/overview' },
-        { x: 512, label: '状态检测与历史回溯', to: '/cloud/monitor' },
+        { x: 415, label: '状态检测与历史回溯', to: '/cloud/monitor' },
         { x: 706, label: '全生命周期数据管理', to: '/cloud/lifecycle' },
       ].map((m) => (
         <Module
@@ -127,49 +126,47 @@ export function OverallArchitectureDiagram({ className }: Props) {
         />
       ))}
 
-      {/* 云侧层内：数据收集 → 集群决策 / 状态检测 → 全生命周期 */}
-      <path d="M316 93 L296 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
-      <path d="M488 93 L510 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
-      <path d="M682 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      {/* 数据收集（移至模块行下方，紧邻数据中心与云边协同带） */}
+      <Module
+        x={330}
+        y={160}
+        w={170}
+        h={58}
+        grad="oa-g-cloud"
+        line={DIAG.cloudLine}
+        label="数据收集"
+        onClick={() => navigate('/cloud/overview')}
+      />
 
-      {/* 数据中心（船形图标，桅顶对齐数据收集中心 x=403） */}
-      <ShipIcon x={379} y={150} />
-      <text x={405} y={214} textAnchor="middle" fill={DIAG.cloudLine} fontFamily={FONT_BODY} fontSize={12} fontWeight={700}>
+      {/* 云侧层内：
+          a. 数据收集顶边 → 上行左肘 → 集群决策底边
+          b. 数据收集顶边 → 竖直向上 → 状态检测底边
+          c. 状态检测 → 全生命周期
+          d. 全生命周期底边 → 下行左肘 → 数据中心（船）
+          e. 数据收集右舷 → 水平向右 → 数据中心（船） */}
+      <path d="M400 160 L400 132 L209 132 L209 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M470 160 L470 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M585 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M791 122 L791 148 L645 148 L645 181" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M500 189 L613 189" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+
+      {/* 数据中心（船形图标，置于数据收集右侧） */}
+      <ShipIcon x={606} y={162} />
+      <text x={632} y={220} textAnchor="middle" fill={DIAG.cloudLine} fontFamily={FONT_BODY} fontSize={12} fontWeight={700}>
         数据中心
       </text>
-      {/* d. 数据收集底边 → 竖直向下直入数据中心船顶 */}
-      <path
-        d="M403 122 L403 158"
-        fill="none"
-        stroke={DIAG.lineGray}
-        strokeWidth={1.8}
-        markerEnd="url(#oa-gray)"
-        className="flow-edge"
-      />
-      {/* e. 数据中心左舷 → x=209 主干竖直向上 → 箭头进入集群决策底边 */}
-      <path
-        d="M385 186 L209 186 L209 124"
-        fill="none"
-        stroke={DIAG.lineGray}
-        strokeWidth={1.8}
-        markerEnd="url(#oa-gray)"
-        className="flow-edge"
-      />
-      {/* f. 全生命周期底边 → 竖直向下 → 水平向左（模块行下方）→ 在 x=209 汇入主干回数据中心 */}
-      <path
-        d="M791 122 L791 138 L210 138"
-        fill="none"
-        stroke={DIAG.lineGray}
-        strokeWidth={1.8}
-        markerEnd="url(#oa-gray)"
-        className="flow-edge"
-      />
 
       {/* ── 云边协同 ──────────────────────────────────────────── */}
       <Band y={230} h={66} />
       {/* g/h. 珠链通断示意（无箭头）：横杠居中，上 3 珠接云侧底边、下 2 珠接边侧顶边 */}
       <BeadHub cx={500} topY={230} botY={296} />
-      <text x={575} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
+      {/* i. 上行状态双线（青色）：边侧顶边 → 竖直向上 → 箭头入数据收集底边 */}
+      <path d="M380 296 L380 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M405 296 L405 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      {/* j. 下行任务双线（蓝色）：云侧底边 → 竖直向下 → 边侧顶边 */}
+      <path d="M595 230 L595 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M620 230 L620 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <text x={640} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
         云边协同
       </text>
 
@@ -201,9 +198,9 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <path d="M488 355 L510 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M706 355 L684 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
-      {/* l. 任务管理顶边 → 向上 → 水平向右（模块行上方越过）→ 竖直向下入局部规划顶边（任务约束） */}
-      <path d="M209 326 L209 308 L597 308 L597 324" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.8} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <text x={403} y={318} textAnchor="middle" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10}>任务约束</text>
+      {/* l. 任务管理底边靠右 → 向下入走廊(y=399，模块行底与缓存顶之间)→ 水平向右 → 向上入局部规划底边（任务约束） */}
+      <path d="M270 384 L270 399 L620 399 L620 386" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.8} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <text x={445} y={411} textAnchor="middle" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10}>任务约束</text>
 
       {/* 实时数据库缓存 */}
       <Cylinder cx={500} top={414} w={300} h={40} ry={10} grad="oa-g-cyl-amber" line={DIAG.edgeLine} label="实时数据库缓存" />

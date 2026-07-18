@@ -9,7 +9,7 @@ const TITLES: { prefix: string; zh: string; en: string; sub: string }[] = [
     prefix: '/architecture',
     zh: '系统架构',
     en: 'System Architecture',
-    sub: '云侧 · 边侧 · 端侧分层职责',
+    sub: '云侧 · 边侧 · 端侧分层架构',
   },
   {
     prefix: '/cloud',
@@ -42,11 +42,15 @@ export function Layout() {
   useFleetRuntime()
   const { pathname } = useLocation()
   const match = resolveTitle(pathname)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
     <div className="relative flex h-screen w-screen overflow-hidden">
       <div className="atmosphere" />
-      <Sidebar />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((c) => !c)}
+      />
       <main className="relative z-10 flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-end justify-between border-b border-line-soft px-8 pt-5 pb-4">
           <div

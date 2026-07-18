@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react'
 import { FLEET, roleLabel } from '@/config/fleet'
 import { ENABLE_LIVE_WS } from '@/hooks/useFleetRuntime'
 import { useFleetStore } from '@/store/usvStore'
+import { deriveVesselTelemetry } from '@/lib/telemetry'
 import { Badge, Button, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { FaultUnit } from './types'
+import type { ReactNode } from 'react'
 
 interface CardProps {
   id: (typeof FLEET)[number]['id']
   unit: FaultUnit
   role: (typeof FLEET)[number]['role']
   formation: 'A' | 'B'
+  t: number
 }
 
-function FaultCard({ id, unit, role, formation }: CardProps) {
+/** 单艇集群态势卡：感知 / 运动控制 / 通信 / 机舱 / 健康 五域全量端侧数据 */
+function SituationCard({ id, unit, role, formation, t }: CardProps) {
   const isVirtual = role === 'virtual'
   const tone: 'ok' | 'warn' | 'alert' = unit.isFault
     ? 'alert'
@@ -23,6 +27,7 @@ function FaultCard({ id, unit, role, formation }: CardProps) {
         ? 'warn'
         : 'alert'
   const hdgDeg = ((unit.heading * 180) / Math.PI + 360) % 360
+  const tele = deriveVesselTelemetry(unit, t)
   return (
     <div
       className={cn(
@@ -74,20 +79,50 @@ function FaultCard({ id, unit, role, formation }: CardProps) {
         <Progress value={unit.health} tone={tone} className="mt-1.5" />
       </div>
 
-      {/* 姿态读数（对方：X 北 / Y 东） */}
-      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+      {/* 五域端侧数据 */}
+      <Group label="感知">
         <Readout label="X·北" value={unit.x.toFixed(1)} />
         <Readout label="Y·东" value={unit.y.toFixed(1)} />
-        <Readout label="HDG" value={`${hdgDeg.toFixed(0).padStart(3, '0')}°`} />
-        <Readout label="SPD" value={`${unit.speed.toFixed(2)}`} />
-      </div>
-      <div className="mt-1.5">
+        <Readout label="航向" value={`${hdgDeg.toFixed(0).padStart(3, '0')}°`} />
         <Readout
-          label="FAULT"
-          value={unit.isFault ? (unit.code ?? 'ERR') : 'None'}
+          label="姿态 P/R"
+          value={`${tele.pitchDeg >= 0 ? '+' : ''}${tele.pitchDeg.toFixed(1)}° / ${tele.rollDeg >= 0 ? '+' : ''}${tele.rollDeg.toFixed(1)}°`}
+        />
+      </Group>
+      <Group label="运动控制">
+        <Readout label="控制输入" value={tele.controlInput.toFixed(2)} />
+        <Readout label="速度" value={`${unit.speed.toFixed(2)} m/s`} />
+      </Group>
+      <Group label="通信">
+        <Readout label="时延" value={`${tele.latencyMs.toFixed(1)} ms`} />
+        <Readout label="丢包率" value={`${tele.packetLossPct.toFixed(2)}%`} />
+        <Readout label="信号强度" value={`${tele.signalDbm.toFixed(0)} dBm`} />
+      </Group>
+      <Group label="机舱">
+        <Readout label="电源电量" value={`${tele.batteryPct.toFixed(0)}%`} />
+        <Readout label="船舱温度" value={`${tele.cabinTempC.toFixed(1)}℃`} />
+      </Group>
+      <Group label="健康">
+        <Readout label="异常" value={tele.anomaly} tone={unit.isFault ? 'alert' : 'ok'} />
+        <Readout
+          label="故障状态"
+          value={tele.faultState}
           tone={unit.isFault ? 'alert' : 'ok'}
         />
+        <Readout label="健康评估" value={`${tele.healthEval.toFixed(1)}%`} />
+      </Group>
+    </div>
+  )
+}
+
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="mt-2.5">
+      <div className="mb-1 flex items-center gap-1.5">
+        <span className="h-px w-2.5 bg-line-strong/60" />
+        <span className="chip text-ink-faint">{label}</span>
       </div>
+      <div className="grid grid-cols-2 gap-1.5">{children}</div>
     </div>
   )
 }
@@ -118,6 +153,7 @@ function Readout({
 
 export function FaultGrid() {
   const frame = useFleetStore((s) => s.frame)
+  const updatedAt = useFleetStore((s) => s.updatedAt)
   const source = useFleetStore((s) => s.source)
   const receiver = useFleetStore((s) => s.receiver)
   const receiverError = useFleetStore((s) => s.receiverError)
@@ -166,11 +202,11 @@ export function FaultGrid() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="label-eyebrow">Fleet Health</span>
+              <span className="label-eyebrow">Cluster Situation</span>
               <Badge tone={connectionBadge.tone}>{connectionBadge.label}</Badge>
             </div>
             <h3 className="mt-0.5 font-display text-[17px] font-600 text-ink">
-              编队故障与健康管理
+              集群态势
             </h3>
           </div>
           <div className="text-right">
@@ -268,12 +304,13 @@ export function FaultGrid() {
 
         <div className="stagger space-y-2 pr-1">
           {FLEET.map((u) => (
-            <FaultCard
+            <SituationCard
               key={u.id}
               id={u.id}
               unit={frame[u.id]}
               role={u.role}
               formation={u.formation}
+              t={updatedAt}
             />
           ))}
         </div>

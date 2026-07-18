@@ -132,23 +132,32 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <path d="M488 93 L510 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M682 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
-      {/* 数据中心（船形图标） */}
-      <ShipIcon x={404} y={150} />
-      <text x={430} y={214} textAnchor="middle" fill={DIAG.cloudLine} fontFamily={FONT_BODY} fontSize={12} fontWeight={700}>
+      {/* 数据中心（船形图标，桅顶对齐数据收集中心 x=403） */}
+      <ShipIcon x={379} y={150} />
+      <text x={405} y={214} textAnchor="middle" fill={DIAG.cloudLine} fontFamily={FONT_BODY} fontSize={12} fontWeight={700}>
         数据中心
       </text>
-      {/* 数据中心 → 集群决策（向上汇入） */}
+      {/* d. 数据收集底边 → 竖直向下直入数据中心船顶 */}
       <path
-        d="M425 158 L425 134 L209 134 L209 126"
+        d="M403 122 L403 158"
         fill="none"
         stroke={DIAG.lineGray}
         strokeWidth={1.8}
         markerEnd="url(#oa-gray)"
         className="flow-edge"
       />
-      {/* 全生命周期数据管理 → 数据中心（向下归档） */}
+      {/* e. 数据中心左舷 → x=209 主干竖直向上 → 箭头进入集群决策底边 */}
       <path
-        d="M791 126 L791 174 L455 174"
+        d="M385 186 L209 186 L209 124"
+        fill="none"
+        stroke={DIAG.lineGray}
+        strokeWidth={1.8}
+        markerEnd="url(#oa-gray)"
+        className="flow-edge"
+      />
+      {/* f. 全生命周期底边 → 竖直向下 → 水平向左（模块行下方）→ 在 x=209 汇入主干回数据中心 */}
+      <path
+        d="M791 122 L791 138 L210 138"
         fill="none"
         stroke={DIAG.lineGray}
         strokeWidth={1.8}
@@ -158,20 +167,10 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
       {/* ── 云边协同 ──────────────────────────────────────────── */}
       <Band y={230} h={66} />
-      {/* 连线自云侧层框底边(y=230)出发，穿过集线器图标，精确落在边侧层框顶边(y=296) */}
-      <path d="M458 230 L458 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M476 230 L476 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M524 296 L524 230" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M542 296 L542 230" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <HubIcon cx={500} cy={263} />
-      <text x={446} y={250} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
-        全局任务、航迹与重规划
-      </text>
-      <text x={566} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
+      {/* g/h. 珠链通断示意（无箭头）：横杠居中，上 3 珠接云侧底边、下 2 珠接边侧顶边 */}
+      <BeadHub cx={500} topY={230} botY={296} />
+      <text x={575} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
         云边协同
-      </text>
-      <text x={566} y={286} fill={DIAG.flowTeal} fontFamily={FONT_BODY} fontSize={10.5}>
-        集群状态、进度与故障
       </text>
 
       {/* ══ 边侧 ═══════════════════════════════════════════════ */}
@@ -202,10 +201,14 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <path d="M488 355 L510 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M706 355 L684 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
+      {/* l. 任务管理顶边 → 向上 → 水平向右（模块行上方越过）→ 竖直向下入局部规划顶边（任务约束） */}
+      <path d="M209 326 L209 308 L597 308 L597 324" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.8} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <text x={403} y={318} textAnchor="middle" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10}>任务约束</text>
+
       {/* 实时数据库缓存 */}
       <Cylinder cx={500} top={414} w={300} h={40} ry={10} grad="oa-g-cyl-amber" line={DIAG.edgeLine} label="实时数据库缓存" />
-      <path d="M403 388 L403 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M597 388 L597 410" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerStart="url(#oa-teal-bi)" markerEnd="url(#oa-teal)" className="flow-edge" />
+      {/* m. 局部规划与在线重构底边 → 竖直向下入缓存顶面（仅此一条入缓存） */}
+      <path d="M597 384 L597 413" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerEnd="url(#oa-teal)" className="flow-edge" />
 
       {/* 无人艇排 + Mesh 互联 */}
       {[
@@ -215,12 +218,13 @@ export function OverallArchitectureDiagram({ className }: Props) {
       ].map((b) => (
         <BoatChip key={b.label} cx={b.cx} top={498} label={b.label} onClick={() => navigate('/terminal/overview')} />
       ))}
-      <path d="M230 486 L430 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
-      <path d="M500 486 L500 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
-      <path d="M770 486 L570 458" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
-      <text x={316} y={464} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
-      <text x={512} y={472} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
-      <text x={684} y={464} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
+      {/* n. 缓存底面 → 3 条 Mesh 双向肘形线 → 三艇顶边（左弯 / 中直 / 右弯） */}
+      <path d="M400 454 L400 472 L230 472 L230 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      <path d="M500 454 L500 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      <path d="M600 454 L600 472 L770 472 L770 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      <text x={300} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
+      <text x={514} y={472} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
+      <text x={700} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
 
       {/* ── 数据收发 ──────────────────────────────────────────── */}
       <Band y={568} h={64} />
@@ -664,6 +668,47 @@ function Band({ y, h }: { y: number; h: number }) {
       <rect x={40} y={y} width={920} height={h} fill="url(#oa-grid)" />
       <line x1={40} y1={y} x2={960} y2={y} stroke={DIAG.lineGray} strokeOpacity={0.3} strokeWidth={1} />
       <line x1={40} y1={y + h} x2={960} y2={y + h} stroke={DIAG.lineGray} strokeOpacity={0.3} strokeWidth={1} />
+    </g>
+  )
+}
+
+/* ── 珠链集线器（链路通断示意：横杠 + 上 3 珠 / 下 2 珠，无箭头） ── */
+function BeadHub({ cx, topY, botY }: { cx: number; topY: number; botY: number }) {
+  const cy = (topY + botY) / 2
+  const barY = cy - 6
+  const topXs = [cx - 35, cx, cx + 35]
+  const botXs = [cx - 15, cx + 15]
+  return (
+    <g>
+      {topXs.map((x, i) => (
+        <g key={`t${x}`}>
+          <line x1={x} y1={topY} x2={x} y2={barY} stroke={DIAG.flowBlue} strokeWidth={1.8} />
+          <circle
+            cx={x}
+            cy={topY + (barY - topY) * 0.55}
+            r={3.2}
+            fill={DIAG.flowBlue}
+            stroke="#ffffff"
+            strokeWidth={1}
+            style={{ animation: 'pulse-soft 2.4s ease-in-out infinite', animationDelay: `${i * 0.35}s` }}
+          />
+        </g>
+      ))}
+      {botXs.map((x, i) => (
+        <g key={`b${x}`}>
+          <line x1={x} y1={barY + 12} x2={x} y2={botY} stroke={DIAG.flowTeal} strokeWidth={1.8} />
+          <circle
+            cx={x}
+            cy={barY + 12 + (botY - barY - 12) * 0.45}
+            r={3.2}
+            fill={DIAG.flowTeal}
+            stroke="#ffffff"
+            strokeWidth={1}
+            style={{ animation: 'pulse-soft 2.4s ease-in-out infinite', animationDelay: `${1.1 + i * 0.35}s` }}
+          />
+        </g>
+      ))}
+      <rect x={cx - 55} y={barY} width={110} height={12} rx={4} fill="#F2F8FE" stroke={DIAG.flowBlue} strokeWidth={1.6} />
     </g>
   )
 }

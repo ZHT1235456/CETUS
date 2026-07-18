@@ -44,49 +44,51 @@ export default function CloudDecision() {
         />
       </div>
 
-      <section className="panel rounded-lg p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-[15px] font-600 text-ink">当前全局态势摘要</h3>
-          <div className="flex items-center gap-3">
-            <Badge tone="water">均值健康 {avgHealth.toFixed(1)}%</Badge>
-            <Badge tone={faults.length ? 'alert' : 'ok'}>
-              {faults.length ? `${faults.length} 告警` : '无告警'}
-            </Badge>
-          </div>
-        </div>
-        <div className="stagger grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {FLEET.map((u) => {
-            const unit = frame[u.id]
-            return (
-              <div
-                key={u.id}
-                className={cn(
-                  'card-hover rounded-md border px-3 py-2.5',
-                  unit.isFault ? 'border-accent/40 bg-accent/8' : 'border-line-soft bg-surface/70',
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-[13px] font-600">{u.id}</span>
-                  <Dot tone={unit.isFault ? 'alert' : 'ok'} />
-                </div>
-                <Progress
-                  value={unit.health}
-                  tone={unit.isFault ? 'alert' : unit.health >= 90 ? 'ok' : 'warn'}
-                  className="mt-2"
-                />
-                <div className="mt-1.5 flex justify-between font-mono text-[11px] text-ink-faint">
-                  <span>
-                    N {unit.x.toFixed(1)} · E {unit.y.toFixed(1)}
-                  </span>
-                  <span>{(unit.speed * 1).toFixed(2)} m/s</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
+      <div className="grid items-start gap-4 lg:grid-cols-[58%_42%]">
+        <GlobalTrackSketch />
 
-      <GlobalTrackSketch />
+        <section className="panel rounded-lg p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-display text-[15px] font-600 text-ink">当前全局态势摘要</h3>
+            <div className="flex items-center gap-3">
+              <Badge tone="water">均值健康 {avgHealth.toFixed(1)}%</Badge>
+              <Badge tone={faults.length ? 'alert' : 'ok'}>
+                {faults.length ? `${faults.length} 告警` : '无告警'}
+              </Badge>
+            </div>
+          </div>
+          <div className="stagger grid gap-2 sm:grid-cols-2">
+            {FLEET.map((u) => {
+              const unit = frame[u.id]
+              return (
+                <div
+                  key={u.id}
+                  className={cn(
+                    'card-hover rounded-md border px-3 py-2.5',
+                    unit.isFault ? 'border-accent/40 bg-accent/8' : 'border-line-soft bg-surface/70',
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-[13px] font-600">{u.id}</span>
+                    <Dot tone={unit.isFault ? 'alert' : 'ok'} />
+                  </div>
+                  <Progress
+                    value={unit.health}
+                    tone={unit.isFault ? 'alert' : unit.health >= 90 ? 'ok' : 'warn'}
+                    className="mt-2"
+                  />
+                  <div className="mt-1.5 flex justify-between font-mono text-[11px] text-ink-faint">
+                    <span>
+                      N {unit.x.toFixed(1)} · E {unit.y.toFixed(1)}
+                    </span>
+                    <span>{(unit.speed * 1).toFixed(2)} m/s</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
@@ -138,7 +140,7 @@ function GlobalTrackSketch() {
         <h3 className="font-display text-[15px] font-600 text-ink">全局航迹 / 态势平面</h3>
         <Badge tone="water">实时</Badge>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="blueprint-bg h-auto w-full max-w-3xl rounded-md ring-1 ring-line-soft">
+      <svg viewBox={`0 0 ${W} ${H}`} className="blueprint-bg h-auto w-full rounded-md ring-1 ring-line-soft">
         {pts.map((p) => {
           const x = sx(p.x)
           const y = sy(p.y)

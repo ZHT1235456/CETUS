@@ -17,8 +17,9 @@ export const TRAJECTORY_LOOP_SECONDS = 150
 const TAU = Math.PI * 2
 /** 作业区中心（对齐 coords.ts THEIR_CENTER：北 380 / 东 -470） */
 const CENTER = { x: 380, y: -470 }
-const LOOP_RX = 38
-const LOOP_RY = 24
+/** 领航艇环绕半径（回旋尺度已再收 50%） */
+const LOOP_RX = 19
+const LOOP_RY = 12
 
 type OffsetSpec = { base: number; amp: number; period: number; phase: number }
 

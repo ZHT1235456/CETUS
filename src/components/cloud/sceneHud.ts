@@ -27,7 +27,7 @@ export function createBoatLabel(cfg: USVConfig): CSS2DObject {
 /** 全局视角（非跟踪） */
 export type ViewMode = 'overview' | 'top'
 
-/** 编队总览 / 俯视 相对作业中心的相机位姿（环绕半径已按需收紧至原 30%） */
+/** 编队总览 / 俯视 相对作业中心的相机位姿（环绕半径约为初始设计的 65%） */
 export function fleetCameraPose(
   mode: ViewMode,
   center: { x: number; y: number; z: number },
@@ -37,7 +37,7 @@ export function fleetCameraPose(
     return {
       position: new THREE.Vector3(
         center.x,
-        center.y + 33 * BOAT_VISUAL_SCALE,
+        center.y + 71.5 * BOAT_VISUAL_SCALE,
         center.z + 0.05 * BOAT_VISUAL_SCALE,
       ),
       target: t,
@@ -46,8 +46,8 @@ export function fleetCameraPose(
   return {
     position: new THREE.Vector3(
       center.x,
-      center.y + 12.6 * BOAT_VISUAL_SCALE,
-      center.z + 17.4 * BOAT_VISUAL_SCALE,
+      center.y + 27.3 * BOAT_VISUAL_SCALE,
+      center.z + 37.7 * BOAT_VISUAL_SCALE,
     ),
     target: t,
   }

@@ -16,6 +16,8 @@ export interface VesselTelemetry {
   batteryPct: number
   cabinTempC: number
   controlInput: number
+  pitchDeg: number
+  rollDeg: number
   anomaly: string
   faultState: string
   healthEval: number
@@ -34,6 +36,8 @@ export function deriveVesselTelemetry(unit: FleetUnit, t: number): VesselTelemet
   const batteryPct = Math.max(18, Math.min(100, unit.health * 0.9 + 8 - unit.speed * 1.5))
   const cabinTempC = 26.5 + (100 - unit.health) * 0.04 + seed * 0.15
   const controlInput = unit.speed * 0.42 + Math.sin(unit.heading) * 0.08
+  const pitchDeg = 1.4 * Math.sin(t * 0.8 + seed * 1.7) + Math.min(unit.speed * 0.4, 2)
+  const rollDeg = 2.4 * Math.sin(t * 0.63 + seed * 2.3)
   const taskProgressPct = (((t / TRAJECTORY_LOOP_SECONDS + seed * 0.13) % 1) + 1) % 1 * 100
   return {
     latencyMs,
@@ -42,6 +46,8 @@ export function deriveVesselTelemetry(unit: FleetUnit, t: number): VesselTelemet
     batteryPct,
     cabinTempC,
     controlInput,
+    pitchDeg,
+    rollDeg,
     anomaly: unit.isFault ? '通信/动力异常' : '无',
     faultState: unit.isFault ? unit.code ?? 'FAULT' : '正常',
     healthEval: unit.health,

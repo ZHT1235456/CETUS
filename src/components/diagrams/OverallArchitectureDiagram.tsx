@@ -86,16 +86,8 @@ export function OverallArchitectureDiagram({ className }: Props) {
         <text x={70} y={13.5}>下行任务</text>
         <line x1={122} y1={10} x2={146} y2={10} stroke={DIAG.flowTeal} strokeWidth={2.4} />
         <text x={152} y={13.5}>上行状态</text>
-        <line
-          x1={204}
-          y1={10}
-          x2={228}
-          y2={10}
-          stroke={MESH}
-          strokeWidth={2}
-          markerStart="url(#oa-mesh-bi)"
-          markerEnd="url(#oa-mesh)"
-        />
+        <line x1={204} y1={7} x2={228} y2={7} stroke={DIAG.flowBlue} strokeWidth={2} strokeDasharray="4 3" />
+        <line x1={204} y1={13} x2={228} y2={13} stroke={DIAG.flowTeal} strokeWidth={2} strokeDasharray="4 3" />
         <text x={234} y={13.5}>Mesh 互联</text>
         <line x1={296} y1={10} x2={320} y2={10} stroke={DIAG.emergency} strokeWidth={2.2} strokeDasharray="5 4" />
         <text x={326} y={13.5}>紧急直达</text>
@@ -160,14 +152,14 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <Band y={230} h={66} />
       {/* g/h. 珠链通断示意（无箭头）：横杠居中，上 3 珠接云侧底边、下 2 珠接边侧顶边 */}
       <BeadHub cx={500} topY={230} botY={296} />
-      {/* i. 上行状态双线（青色）：边侧顶边 → 竖直向上 → 箭头入数据收集底边 */}
-      <path d="M380 296 L380 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M405 296 L405 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
-      {/* j. 下行任务双线（蓝色）：云侧底边 → 竖直向下 → 边侧顶边 */}
-      <path d="M595 230 L595 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M620 230 L620 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <text x={640} y={267} fill={DIAG.flowBlue} fontFamily={FONT_DISPLAY} fontSize={13} fontWeight={700}>
-        云边协同
+      {/* i. 上行状态双线（青色）：边侧顶边 → 竖直向上 → 箭头对准数据收集底边水平中心 */}
+      <path d="M403 296 L403 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M427 296 L427 219" fill="none" stroke={DIAG.flowTeal} strokeWidth={2.2} markerEnd="url(#oa-teal)" className="flow-edge" />
+      {/* j. 下行决策双线（蓝色）：集群决策底边 → 穿云侧层框与连接带 → 边侧顶边 */}
+      <path d="M170 122 L170 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M195 122 L195 296" fill="none" stroke={DIAG.flowBlue} strokeWidth={2.2} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <text x={158} y={267} textAnchor="end" fill={DIAG.flowBlue} fontFamily={FONT_BODY} fontSize={10.5}>
+        决策指令
       </text>
 
       {/* ══ 边侧 ═══════════════════════════════════════════════ */}
@@ -197,6 +189,8 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <path d="M316 355 L296 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M488 355 L510 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M706 355 L684 355" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      {/* k. 多艇状态汇聚顶边 → 向上 → 水平向右越过局部规划 → 向下入边缘自治顶边（监测流） */}
+      <path d="M403 326 L403 311 L791 311 L791 324" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerEnd="url(#oa-teal)" className="flow-edge" />
 
       {/* l. 任务管理底边靠右 → 向下入走廊(y=399，模块行底与缓存顶之间)→ 水平向右 → 向上入局部规划底边（任务约束） */}
       <path d="M270 384 L270 399 L620 399 L620 386" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.8} markerEnd="url(#oa-blue)" className="flow-edge" />
@@ -204,8 +198,10 @@ export function OverallArchitectureDiagram({ className }: Props) {
 
       {/* 实时数据库缓存 */}
       <Cylinder cx={500} top={414} w={300} h={40} ry={10} grad="oa-g-cyl-amber" line={DIAG.edgeLine} label="实时数据库缓存" />
-      {/* m. 局部规划与在线重构底边 → 竖直向下入缓存顶面（仅此一条入缓存） */}
+      {/* m. 局部规划与在线重构底边 → 竖直向下入缓存顶面 */}
       <path d="M597 384 L597 413" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerEnd="url(#oa-teal)" className="flow-edge" />
+      {/* o. 实时数据库缓存顶面左侧 → 向上左肘 → 多艇状态汇聚底边（缓存状态上行） */}
+      <path d="M430 415 L430 394 L403 394 L403 386" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.8} markerEnd="url(#oa-teal)" className="flow-edge" />
 
       {/* 无人艇排 + Mesh 互联 */}
       {[
@@ -215,10 +211,13 @@ export function OverallArchitectureDiagram({ className }: Props) {
       ].map((b) => (
         <BoatChip key={b.label} cx={b.cx} top={498} label={b.label} onClick={() => navigate('/terminal/overview')} />
       ))}
-      {/* n. 缓存底面 → 3 条 Mesh 双向肘形线 → 三艇顶边（左弯 / 中直 / 右弯） */}
-      <path d="M400 454 L400 472 L230 472 L230 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
-      <path d="M500 454 L500 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
-      <path d="M600 454 L600 472 L770 472 L770 486" fill="none" stroke={MESH} strokeWidth={1.7} markerStart="url(#oa-mesh-bi)" markerEnd="url(#oa-mesh)" className="flow-edge" />
+      {/* n. 缓存底面 ↔ 三艇顶边：每条 Mesh 链路改为并排双虚线（蓝向下 / 青向上，水平错开 8px） */}
+      <path d="M396 454 L396 470 L226 470 L226 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M234 486 L234 474 L404 474 L404 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M496 454 L496 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M504 486 L504 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
+      <path d="M596 454 L596 470 L766 470 L766 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M774 486 L774 474 L604 474 L604 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
       <text x={300} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={514} y={472} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={700} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>

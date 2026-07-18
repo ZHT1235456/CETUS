@@ -1,10 +1,13 @@
 import { FLEET } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
-import { Badge, Dot, Progress } from '@/components/ui'
+import { deriveVesselTelemetry } from '@/lib/telemetry'
+import { VesselGaugeStrip } from '@/components/telemetry/VesselGauges'
+import { Badge, Dot } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export default function CloudDecision() {
   const frame = useFleetStore((s) => s.frame)
+  const updatedAt = useFleetStore((s) => s.updatedAt)
   const faults = FLEET.filter((u) => frame[u.id].isFault)
   const avgHealth =
     FLEET.reduce((a, u) => a + frame[u.id].health, 0) / FLEET.length
@@ -15,7 +18,7 @@ export default function CloudDecision() {
         <div className="label-eyebrow">Cluster Decision</div>
         <h2 className="mt-1 font-display text-[20px] font-600 text-ink">集群决策</h2>
         <p className="mt-1 max-w-3xl text-[13px] text-ink-soft">
-          仅使用当前集群态势：全局航迹规划、任务重规划、应急响应与接管。不读取全生命周期档案。
+          使用当前集群态势：全局航迹规划、任务重规划、应急响应与接管。
         </p>
       </header>
 
@@ -49,7 +52,7 @@ export default function CloudDecision() {
 
         <section className="panel rounded-lg p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-[15px] font-600 text-ink">当前全局态势摘要</h3>
+            <h3 className="font-display text-[15px] font-600 text-ink">当前全局态势</h3>
             <div className="flex items-center gap-3">
               <Badge tone="water">均值健康 {avgHealth.toFixed(1)}%</Badge>
               <Badge tone={faults.length ? 'alert' : 'ok'}>
@@ -60,6 +63,8 @@ export default function CloudDecision() {
           <div className="stagger grid gap-2 sm:grid-cols-2">
             {FLEET.map((u) => {
               const unit = frame[u.id]
+              const tel = deriveVesselTelemetry(unit, updatedAt)
+              const hdgDeg = ((unit.heading * 180) / Math.PI + 360) % 360
               return (
                 <div
                   key={u.id}
@@ -70,18 +75,31 @@ export default function CloudDecision() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-display text-[13px] font-600">{u.id}</span>
-                    <Dot tone={unit.isFault ? 'alert' : 'ok'} />
-                  </div>
-                  <Progress
-                    value={unit.health}
-                    tone={unit.isFault ? 'alert' : unit.health >= 90 ? 'ok' : 'warn'}
-                    className="mt-2"
-                  />
-                  <div className="mt-1.5 flex justify-between font-mono text-[11px] text-ink-faint">
-                    <span>
-                      N {unit.x.toFixed(1)} · E {unit.y.toFixed(1)}
+                    <span className="flex items-center gap-1.5">
+                      <Dot tone={unit.isFault ? 'alert' : 'ok'} />
+                      <span
+                        className={cn(
+                          'font-mono text-[12px] font-700 tabular-nums',
+                          unit.isFault
+                            ? 'text-accent'
+                            : unit.health >= 90
+                              ? 'text-ok'
+                              : 'text-warn',
+                        )}
+                      >
+                        {unit.health.toFixed(0)}%
+                      </span>
                     </span>
-                    <span>{(unit.speed * 1).toFixed(2)} m/s</span>
+                  </div>
+                  {/* 端侧同源仪表：姿态 / 航速 / 电量 / 信号 */}
+                  <VesselGaugeStrip tel={tel} speed={unit.speed} size="sm" className="mt-2" />
+                  <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10.5px] tabular-nums text-ink-faint">
+                    <span>N {unit.x.toFixed(1)} · E {unit.y.toFixed(1)}</span>
+                    <span>航向 {hdgDeg.toFixed(0)}°</span>
+                    <span>时延 {tel.latencyMs.toFixed(0)} ms</span>
+                    <span>丢包 {tel.packetLossPct.toFixed(1)}%</span>
+                    <span>舱温 {tel.cabinTempC.toFixed(1)}℃</span>
+                    <span>异常 {tel.anomaly}</span>
                   </div>
                 </div>
               )

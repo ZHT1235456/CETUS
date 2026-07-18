@@ -30,7 +30,7 @@ export default function CloudLifecycle() {
         <div className="label-eyebrow">Lifecycle Data · 档案室</div>
         <h2 className="mt-1 font-display text-[20px] font-600 text-ink">全生命周期数据管理</h2>
         <p className="mt-1 max-w-3xl text-[13px] text-ink-soft">
-          保存健康、故障与寿命、任务日志与设备档案，并与艇标识、任务会话、时间范围关联。服务回溯，不参与在线决策。
+          保存健康、故障与寿命、任务日志与设备档案，并与艇标识、任务会话、时间范围关联。
         </p>
       </header>
 

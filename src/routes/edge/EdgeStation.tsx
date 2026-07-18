@@ -3,6 +3,7 @@ import { EDGE_STATIONS, isEdgeStationId } from '@/config/edgeStations'
 import { FLEET_BY_ID, roleLabel } from '@/config/fleet'
 import { useFleetStore } from '@/store/usvStore'
 import { deriveVesselTelemetry } from '@/lib/telemetry'
+import { Sparkline, VesselGaugeStrip } from '@/components/telemetry/VesselGauges'
 import { Badge, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { FleetUnit, USVId } from '@/types/usv'
@@ -34,7 +35,7 @@ function EdgeStationView({ stationId }: { stationId: '1' | '2' }) {
             {station.label} · 领航艇 {f.leader.replace('USV-', '')}
           </h2>
           <p className="mt-1 text-[13px] text-ink-soft">
-            分管 {f.members.join('、')} · 运行 / 通信 / 健康状态近实时汇聚 · 无长周期历史图
+            分管 {f.members.join('、')} · 运行 / 通信 / 健康状态近实时汇聚
           </p>
         </div>
         <div className="text-right">
@@ -81,6 +82,9 @@ function MemberCard({ id }: { id: USVId }) {
   const tone = unit.isFault ? 'alert' : unit.health >= 90 ? 'ok' : 'warn'
   const hdgDeg = ((unit.heading * 180) / Math.PI + 360) % 360
   const tele = deriveVesselTelemetry(unit, updatedAt)
+  const latencySeries = Array.from({ length: 24 }, (_, i) =>
+    deriveVesselTelemetry(unit, updatedAt - (23 - i) * 0.9).latencyMs,
+  )
 
   return (
     <div
@@ -106,6 +110,9 @@ function MemberCard({ id }: { id: USVId }) {
       </div>
       <Progress value={unit.health} tone={tone} className="mt-2" />
 
+      {/* 端侧同源仪表组：姿态 / 航速 / 电量 / 信号 */}
+      <VesselGaugeStrip tel={tele} speed={unit.speed} size="md" className="mt-3" />
+
       <div className="mt-2.5 space-y-2">
         <div>
           <div className="label-eyebrow mb-1">运行状态</div>
@@ -126,11 +133,11 @@ function MemberCard({ id }: { id: USVId }) {
 
         <div>
           <div className="label-eyebrow mb-1">通信状态</div>
-          <div className="grid grid-cols-3 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11.5px] text-ink-soft">
             <span>时延 {tele.latencyMs.toFixed(1)} ms</span>
             <span>丢包 {tele.packetLossPct.toFixed(2)}%</span>
-            <span>信号 {tele.signalDbm.toFixed(0)} dBm</span>
           </div>
+          <Sparkline data={latencySeries} className="mt-1 h-6 w-full text-water" />
         </div>
 
         <div>

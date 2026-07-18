@@ -3,6 +3,7 @@ import { FLEET, roleLabel } from '@/config/fleet'
 import { ENABLE_LIVE_WS } from '@/hooks/useFleetRuntime'
 import { useFleetStore } from '@/store/usvStore'
 import { deriveVesselTelemetry } from '@/lib/telemetry'
+import { VesselGaugeStrip } from '@/components/telemetry/VesselGauges'
 import { Badge, Button, Dot, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { FaultUnit } from './types'
@@ -79,6 +80,9 @@ function SituationCard({ id, unit, role, formation, t }: CardProps) {
         <Progress value={unit.health} tone={tone} className="mt-1.5" />
       </div>
 
+      {/* 端侧同源仪表组（窄版单行）：姿态 / 航速 / 电量 / 信号 */}
+      <VesselGaugeStrip tel={tele} speed={unit.speed} size="sm" className="mt-2.5" />
+
       {/* 五域端侧数据 */}
       <Group label="感知">
         <Readout label="X·北" value={unit.x.toFixed(1)} />
@@ -91,15 +95,12 @@ function SituationCard({ id, unit, role, formation, t }: CardProps) {
       </Group>
       <Group label="运动控制">
         <Readout label="控制输入" value={tele.controlInput.toFixed(2)} />
-        <Readout label="速度" value={`${unit.speed.toFixed(2)} m/s`} />
       </Group>
       <Group label="通信">
         <Readout label="时延" value={`${tele.latencyMs.toFixed(1)} ms`} />
         <Readout label="丢包率" value={`${tele.packetLossPct.toFixed(2)}%`} />
-        <Readout label="信号强度" value={`${tele.signalDbm.toFixed(0)} dBm`} />
       </Group>
       <Group label="机舱">
-        <Readout label="电源电量" value={`${tele.batteryPct.toFixed(0)}%`} />
         <Readout label="船舱温度" value={`${tele.cabinTempC.toFixed(1)}℃`} />
       </Group>
       <Group label="健康">

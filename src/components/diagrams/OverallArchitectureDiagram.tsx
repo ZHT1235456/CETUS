@@ -131,15 +131,15 @@ export function OverallArchitectureDiagram({ className }: Props) {
       />
 
       {/* 云侧层内：
-          a. 数据收集顶边 → 上行左肘 → 集群决策底边
+          a. 数据收集西边 → 水平向左 → 向上入集群决策南边
           b. 数据收集顶边 → 竖直向上 → 状态检测底边
           c. 状态检测 → 全生命周期
-          d. 全生命周期底边 → 下行左肘 → 数据中心（船）
+          d. 全生命周期南边 → 竖直向下 → 水平向左入数据中心东边
           e. 数据收集右舷 → 水平向右 → 数据中心（船） */}
-      <path d="M400 160 L400 132 L209 132 L209 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M330 189 L209 189 L209 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M470 160 L470 124" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M585 93 L704 93" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
-      <path d="M791 122 L791 148 L645 148 L645 181" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
+      <path d="M791 122 L791 198 L653 198" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
       <path d="M500 189 L613 189" fill="none" stroke={DIAG.lineGray} strokeWidth={1.8} markerEnd="url(#oa-gray)" className="flow-edge" />
 
       {/* 数据中心（船形图标，置于数据收集右侧） */}
@@ -216,8 +216,9 @@ export function OverallArchitectureDiagram({ className }: Props) {
       <path d="M234 486 L234 474 L404 474 L404 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
       <path d="M496 454 L496 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
       <path d="M504 486 L504 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
-      <path d="M596 454 L596 470 L766 470 L766 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
-      <path d="M774 486 L774 474 L604 474 L604 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
+      {/* 无人艇 N：缓存→艇 出发口(x=604) 移到 艇→缓存 接收口(x=596) 右侧 */}
+      <path d="M604 454 L604 470 L774 470 L774 486" fill="none" stroke={DIAG.flowBlue} strokeWidth={1.7} markerEnd="url(#oa-blue)" className="flow-edge" />
+      <path d="M766 486 L766 474 L596 474 L596 454" fill="none" stroke={DIAG.flowTeal} strokeWidth={1.7} markerEnd="url(#oa-teal)" className="flow-edge" />
       <text x={300} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={514} y={472} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
       <text x={700} y={466} fill={MESH} fontFamily={FONT_MONO} fontSize={10} fontStyle="italic">Mesh</text>
